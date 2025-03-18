@@ -1,0 +1,35 @@
+# Ignore virtual environment
+env/
+venv/
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore log files
+*.log
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Windows system files
+Thumbs.db
+
+# Ignore generated benchmark files
+*.csv
+
+# Ignore test artifacts
+coverage/
+test-results/
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.iml
+
+# Ignore temporary files
+*.swp
+*.swo
+*~
