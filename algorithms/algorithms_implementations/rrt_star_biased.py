@@ -12,12 +12,13 @@ class RRTStarBiasedAlgorithm(Algorithm):
         self.enable_rewiring = enable_rewiring
         self.enable_shortcut = enable_shortcut
         self.enable_restarting = enable_restarting
-        self.best_path_cost = float('inf')
+        self.best_path_cost = float('inf')  # Track the best path cost found so far
         self.path_found = False
-        self.iterations_since_improvement = 0
-        self.restart_threshold = restart_threshold
-        self.restart_count = 0
-        self.max_restarts = max_restarts
+        self.iterations_since_improvement = 0  # Track iterations without improvement
+        self.restart_threshold = restart_threshold  # Threshold for restarting (relative improvement)
+        self.restart_count = 0 # counter
+        self.max_restarts = max_restarts # maximum number of restarts
+
 
         if map.start:
             start_node = Node(map.start.x, map.start.y)
@@ -130,7 +131,6 @@ class RRTStarBiasedAlgorithm(Algorithm):
         return gamma
 
     def cost(self, node):
-        """Calculates the cost from the root to a given node."""
         cost = 0
         current = node
         while current is not None and current.parent is not None:  # Check for None here
@@ -138,9 +138,8 @@ class RRTStarBiasedAlgorithm(Algorithm):
             current = current.parent
         return cost
 
-
     def rewire_tree(self):
-        for node in self.nodes:
+        for node in list(self.nodes):  # Iterate over a *copy* of the list
             if node.parent is not None:
                 near_nodes = self.get_near_nodes(node)
                 for near_node in near_nodes:
@@ -158,17 +157,19 @@ class RRTStarBiasedAlgorithm(Algorithm):
         for i in range(len(self.path) - 2):
             for j in range(i + 2, len(self.path)):
                 if not self.is_edge_collision(self.path[i].x, self.path[i].y, self.path[j].x, self.path[j].y):
+                    # Check for collision-free connection and better cost
                     if self.cost(self.path[i]) + self.distance(self.path[i].get_position(), self.path[j].get_position()) < self.cost(self.path[j]):
                         if self.path[j].parent is not None:
                             self.path[j].parent.remove_child(self.path[j])
                         self.path[i].add_child(self.path[j])
                         self.path[j].parent = self.path[i]
 
+
     def restart(self):
         #print("Restarting...") # Removed for cleaner output
         self.nodes = []
         if self.map.start:
-            start_node = Node(self.map.start.x, map.start.y)
+            start_node = Node(map.start.x, map.start.y)
             self.nodes.append(start_node)
         self.path = []
         self.path_found = False
