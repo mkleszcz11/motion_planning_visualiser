@@ -1,3 +1,5 @@
+from core.node import Node
+
 class Map:
     def __init__(self, width, height):
         self.width = float(width)
@@ -7,10 +9,10 @@ class Map:
         self.obstacles = []
 
     def set_start(self, x, y):
-        self.start = (float(x), float(y))
+        self.start = Node(float(x), float(y))  # Store as Node object
 
     def set_goal(self, x, y):
-        self.goal = (float(x), float(y))
+        self.goal = Node(float(x), float(y))  # Store as Node object
 
     def add_obstacle(self, x, y, width, height):
         self.obstacles.append((float(x), float(y), float(width), float(height)))

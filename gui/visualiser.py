@@ -1,10 +1,13 @@
 import sys
+
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QGraphicsScene, QGraphicsView, 
                              QGraphicsRectItem, QGraphicsEllipseItem, QSpinBox, QLabel, QVBoxLayout, 
                              QWidget, QGraphicsLineItem, QComboBox, QDoubleSpinBox)
 from PyQt5.QtCore import Qt, QRectF, QLineF, QTimer
 from PyQt5.QtGui import QPen, QColor
+
 from core.map import Map
+from core.node import Node
 
 from algorithms.algorithm_manager import AlgorithmManager
 from maps.maps_manager import MapsManager
@@ -59,6 +62,14 @@ class Visualiser(QMainWindow):
         self.interval_input.setDecimals(3)
         self.interval_input.setValue(0.1)
         self.interval_label = QLabel('Interval (s):')
+        
+        # Step size input
+        self.step_size_input = QDoubleSpinBox()
+        self.step_size_input.setRange(0.01, 30)
+        self.step_size_input.setValue(2)
+        self.step_size_input.setSingleStep(0.01)
+        self.step_size_input_label = QLabel("Step Size:")
+        self.step_size_input.valueChanged.connect(self.update_step_size)
 
         # Timer for auto-iteration
         self.timer = QTimer()
@@ -86,6 +97,8 @@ class Visualiser(QMainWindow):
         layout.addWidget(self.step_input)
         layout.addWidget(self.interval_label)
         layout.addWidget(self.interval_input)
+        layout.addWidget(self.step_size_input_label)
+        layout.addWidget(self.step_size_input)
         layout.addWidget(self.iterate_button)
         layout.addWidget(self.auto_iterate_button)
         layout.addWidget(self.stop_auto_iterate_button)
@@ -114,6 +127,12 @@ class Visualiser(QMainWindow):
 
     def draw_map(self):
         self.scene.clear()
+        if self.algorithm:
+            # point_size is twice the step size
+            # Example:
+            # Step size is 4, which means if my algorithm is 4 units away from
+            # the goal it is considered as done, point "diameter" should be 8
+            point_size = self.algorithm.step_size * 2 * SCALE
 
         # Draw obstacles
         for ox, oy, w, h in self.map.get_obstacles():
@@ -125,30 +144,44 @@ class Visualiser(QMainWindow):
 
         # Draw start point
         if self.map.start:
-            sx, sy = self.map_to_display(*self.map.start)
-            start = QGraphicsEllipseItem(sx, sy, SCALE, SCALE)
+            sx, sy = self.map_to_display(self.map.start.x, self.map.start.y)
+            start = QGraphicsEllipseItem(sx - point_size / 2 , sy - point_size / 2, point_size, point_size)
             start.setBrush(Qt.green)
             self.scene.addItem(start)
 
         # Draw goal point
         if self.map.goal:
-            gx, gy = self.map_to_display(*self.map.goal)
-            goal = QGraphicsEllipseItem(gx, gy, SCALE, SCALE)
+            gx, gy = self.map_to_display(self.map.goal.x, self.map.goal.y)
+            goal = QGraphicsEllipseItem(gx - point_size / 2, gy - point_size / 2, point_size, point_size)
             goal.setBrush(Qt.red)
             self.scene.addItem(goal)
 
-        # Draw path
+        # Draw full tree in blue
         if self.algorithm:
-            nodes = self.algorithm.get_nodes()
-            for i in range(1, len(nodes)):
-                x1, y1 = self.map_to_display(*nodes[i - 1])
-                x2, y2 = self.map_to_display(*nodes[i])
-                line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
-                
-                # Highlight path if goal is reached
-                color = QColor("green") if self.algorithm.is_complete() else QColor("blue")
-                line.setPen(QPen(color, 2))
-                self.scene.addItem(line)
+            for node in self.algorithm.get_nodes():
+                if isinstance(node, Node) and node.parent:
+                    x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                    x2, y2 = self.map_to_display(node.x, node.y)
+                    line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
+                    line.setPen(QPen(QColor("blue"), 2))
+                    self.scene.addItem(line)
+
+            # Draw shortest path in green
+            if self.algorithm.is_complete():
+                for node in self.algorithm.shortest_path:
+                    if node.parent:
+                        x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                        x2, y2 = self.map_to_display(node.x, node.y)
+                        line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
+                        line.setPen(QPen(QColor("green"), 3))
+                        self.scene.addItem(line)
+
+        self.update()
+
+    def update_step_size(self):
+        if self.algorithm:
+            self.algorithm.step_size = self.step_size_input.value()
+            self.draw_map()
 
     def set_start(self):
         self.start_mode = True
@@ -226,10 +259,11 @@ class Visualiser(QMainWindow):
         if selected_algorithm:
             self.algorithm = self.algorithm_manager.get_algorithm(
                 selected_algorithm,
-                self.map,
-                self.benchmark_manager
+                map_instance = self.map,
+                benchmark_manager = self.benchmark_manager
             )
-
+            step_size = self.step_size_input.value()
+            self.algorithm.step_size = step_size
         self.draw_map()
         
     def load_map(self):
@@ -250,7 +284,7 @@ class Visualiser(QMainWindow):
         if self.start_mode:
             self.map.set_start(x, y)
             self.start_mode = False
-            # ✅ Re-initialise algorithm when start is defined
+            # Re-initialise algorithm when start is defined
             self.initialise_algorithm()
 
         elif self.goal_mode:

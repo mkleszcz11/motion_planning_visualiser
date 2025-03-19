@@ -27,6 +27,7 @@ motion_planner_visualizer/
 │   ├── algorithm.py                # Base class for defining algorithms
 │   ├── map.py                      # Handles map structure and properties
 │   ├── maps_manager.py             # Handles map registration and loading
+|   ├── node.py                     # Data structure for nodes
 ├── gui/
 │   ├── visualiser.py               # Main PyQt5 visualizer window
 ├── maps/
@@ -99,7 +100,7 @@ python main.py
 #### Step 1: Add a new algorithm class 
  * Create a new Python file in `algorithms/algorithms_implementations/` folder.
  * Define a new class that inherits from `Algorithm` class in `core/algorithm.py`.
- * Implement all of the required methods, check random_walk.py for reference.
+ * Implement all of the required methods, check random_walk.py or rrt.py for reference.
 
 #### Step 2: Register the new algorithm
  * Open `algorithms/algorithm_manager.py`.
