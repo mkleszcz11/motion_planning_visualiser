@@ -12,6 +12,7 @@ from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
+from algorithms.algorithms_implementations.prm_star_hybrid import HybridSamplingPRMStarAlgorithm
 
 algorithms = [
     {
@@ -35,13 +36,18 @@ algorithms = [
         "algorithm": RRTStarAlgorithm
     },
     {
+        "name": "RRT, Biased",
+        "algorithm": RRTBiasedAlgorithm
+    },
+    {
         "name": "RRT*, Biased",
         "algorithm": RRTStarBiasedAlgorithm
     },
     {
-        "name": "RRT, Biased",
-        "algorithm": RRTBiasedAlgorithm
+        "name": "PRM*, Hybrid",
+        "algorithm": HybridSamplingPRMStarAlgorithm
     }
+    
 ]
 
 class AlgorithmManager:
