@@ -7,6 +7,8 @@
 
 from algorithms.algorithms_implementations.random_walk import RandomWalkAlgorithm
 from algorithms.algorithms_implementations.random_walk_biased import RandomWalkBiasedAlgorithm
+from algorithms.algorithms_implementations.rrt import RRTAlgorithm
+from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 
 algorithms = [
     {
@@ -16,6 +18,14 @@ algorithms = [
     {
         "name": "Biased Random Walk",
         "algorithm": RandomWalkBiasedAlgorithm
+    },
+    {
+        "name": "RRT",
+        "algorithm": RRTAlgorithm
+    },
+    {
+        "name": "Biased RRT",
+        "algorithm": RRTBiasedAlgorithm
     }
 ]
 
@@ -29,5 +39,6 @@ class AlgorithmManager:
     def get_algorithm(self, name, map_instance, benchmark_manager):
         for algorithm in self.algorithms:
             if algorithm["name"] == name:
-                return algorithm["algorithm"](map_instance, benchmark_manager)  # Instantiate directly
+                return algorithm["algorithm"](map = map_instance,
+                                              benchmark_manager = benchmark_manager)  # Instantiate directly
         return None

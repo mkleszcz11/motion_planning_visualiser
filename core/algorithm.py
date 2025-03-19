@@ -1,32 +1,50 @@
 from abc import ABC, abstractmethod
 import math
-from core.map import Map
 import time
+from core.map import Map
+from core.node import Node
 from benchmarks.benchmark_manager import BenchmarkManager
 from benchmarks.benchmark_result import BenchmarkResult
 
 class Algorithm(ABC):
-    def __init__(self, map: Map, benchmark_manager: BenchmarkManager = None):
+    def __init__(self,
+                 map: Map,
+                 step_size: float = 2,
+                 benchmark_manager: BenchmarkManager = None):
         self.map = map
         self.nodes = []
         self.steps = 0
+        self.step_size = step_size
         self.start_time = None
         self.benchmark_manager = benchmark_manager
 
     @abstractmethod
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
-            self.start_benchmark()  # Start benchmark when first step is called
+            self.start_benchmark()
 
-    @abstractmethod
     def is_complete(self):
-        pass
+        """
+        Algorithm is complete if the nearest node is within self.step_size
+        distance of the goal.
+        """
+        if self.map.goal is None:
+            return False
+        
+        last_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+        if last_node is None:
+            return False
+        
+        distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
+        return distance < self.step_size
 
-    @abstractmethod
+
     def clear_nodes(self):
-        # Usually we would like to keep the start node.
+        # Usually we would like to keep a start node.
+        self.nodes = []
         if self.map.start:
-            self.nodes = [self.map.start]
+            start_node = Node(self.map.start.x, self.map.start.y)
+            self.nodes.append(start_node)
 
     def get_nodes(self):
         return self.nodes
@@ -60,18 +78,47 @@ class Algorithm(ABC):
     def compute_path_length(self):
         length = 0
         for i in range(1, len(self.nodes)):
-            x1, y1 = self.nodes[i - 1]
-            x2, y2 = self.nodes[i]
+            x1, y1 = self.nodes[i - 1].get_position()
+            x2, y2 = self.nodes[i].get_position()
             length += math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
         return length
 
-    # Start benchmark automatically when algorithm starts
+    def get_nearest_node(self, sample):
+        if not self.nodes:
+            return None
+
+        nearest = None
+        min_dist = float('inf')
+        for node in self.nodes:
+            dist = self.distance(node.get_position(), sample)
+            if dist < min_dist:
+                nearest = node
+                min_dist = dist
+        return nearest
+    
+    def reconstruct_path(self):
+        # TODO -> It might not work for PRM
+        if self.map.goal is None:
+            return
+        
+        self.shortest_path = []
+        node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+
+        while node is not None:
+            self.shortest_path.append(node)
+            node = node.parent
+        self.shortest_path.reverse()
+        
+    def distance(self, pos1, pos2):
+        if pos1 is None or pos2 is None:
+            return float('inf')
+        return math.sqrt((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)
+
     def start_benchmark(self):
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_time = time.time()
             print(f"Benchmark started for {self.__class__.__name__}")
 
-    # Finalize benchmark automatically when goal is reached
     def finalize_benchmark(self):
         if self.benchmark_manager is None:
             print(f"No benchmark specified!")
