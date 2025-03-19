@@ -11,6 +11,7 @@ from algorithms.algorithms_implementations.rrt import RRTAlgorithm
 from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
+from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
 
 algorithms = [
     {
@@ -32,6 +33,10 @@ algorithms = [
     {
         "name": "RRT*",
         "algorithm": RRTStarAlgorithm
+    },
+    {
+        "name": "RRT*, Biased",
+        "algorithm": RRTStarBiasedAlgorithm
     },
     {
         "name": "RRT, Biased",

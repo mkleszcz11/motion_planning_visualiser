@@ -15,6 +15,9 @@ class Node:
         self.children.append(child)
 
     def remove_child(self, child_node):
-        """Removes a child from the node's children list."""
-        if child_node in self.children:
+        """Removes a child from the node's children list, handling the case
+        where the child might not be present.
+        """
+        if child_node in self.children:  # IMPORTANT: Check for presence
             self.children.remove(child_node)
+
