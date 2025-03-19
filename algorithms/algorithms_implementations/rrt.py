@@ -47,3 +47,16 @@ class RRTAlgorithm(Algorithm):
             new_x = from_node.x + self.step_size * math.cos(theta)
             new_y = from_node.y + self.step_size * math.sin(theta)
             return Node(new_x, new_y, from_node)
+
+    def reconstruct_path(self):
+        """Reconstructs the path from the goal to the start node."""
+        if self.map.goal is None:
+            return
+
+        self.path = []  # Store the path in self.path
+        node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+
+        while node is not None:
+            self.path.append(node)
+            node = node.parent
+        self.path.reverse()  # Reverse to get start -> goal order

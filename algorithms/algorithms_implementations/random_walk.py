@@ -6,7 +6,7 @@ from core.node import Node
 class RandomWalkAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):
         super().__init__(map = map,
-                         benchmark_manager = benchmark_manager)        
+                         benchmark_manager = benchmark_manager)
         if map.start:
             start_node = Node(map.start.x, map.start.y)
             self.nodes.append(start_node)
@@ -16,11 +16,9 @@ class RandomWalkAlgorithm(Algorithm):
             self.start_benchmark()
 
         if self.is_complete():
-            if self.map.goal and self.get_nearest_node((self.map.goal.x, self.map.goal.y)) not in self.nodes:
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
-                self.nodes.append(goal_node)
-                self.reconstruct_path()
-                self.finalize_benchmark()
+            #Simplified
+            self.reconstruct_path()
+            self.finalize_benchmark()
             return
 
         if not self.nodes:
@@ -40,7 +38,23 @@ class RandomWalkAlgorithm(Algorithm):
             self.steps += 1
 
             if self.is_complete():
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
-                self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()
+
+    def reconstruct_path(self):
+        """Reconstructs the path from the goal to the start node."""
+        if self.map.goal is None:
+            return
+
+        self.path = []  # Store the path in self.path
+        #  RandomWalk doesn't guarantee a node *exactly* at the goal.
+        nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+
+        if nearest_node is None:
+            return
+
+        node = nearest_node
+        while node is not None:
+            self.path.append(node)
+            node = node.parent
+        self.path.reverse()

@@ -1,7 +1,7 @@
 import sys
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QGraphicsScene, QGraphicsView, 
-                             QGraphicsRectItem, QGraphicsEllipseItem, QSpinBox, QLabel, QVBoxLayout, 
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QGraphicsScene, QGraphicsView,
+                             QGraphicsRectItem, QGraphicsEllipseItem, QSpinBox, QLabel, QVBoxLayout,
                              QWidget, QGraphicsLineItem, QComboBox, QDoubleSpinBox)
 from PyQt5.QtCore import Qt, QRectF, QLineF, QTimer
 from PyQt5.QtGui import QPen, QColor
@@ -32,7 +32,7 @@ class Visualiser(QMainWindow):
         self.algorithm_selector = QComboBox()
         for algo in self.algorithm_manager.algorithms:
             self.algorithm_selector.addItem(algo["name"])
-        
+
         self.algorithm_selector.currentIndexChanged.connect(self.select_algorithm)
 
         # Map selection dropdown
@@ -62,7 +62,7 @@ class Visualiser(QMainWindow):
         self.interval_input.setDecimals(3)
         self.interval_input.setValue(0.1)
         self.interval_label = QLabel('Interval (s):')
-        
+
         # Step size input
         self.step_size_input = QDoubleSpinBox()
         self.step_size_input.setRange(0.01, 30)
@@ -156,25 +156,45 @@ class Visualiser(QMainWindow):
             goal.setBrush(Qt.red)
             self.scene.addItem(goal)
 
-        # Draw full tree in blue
+        # Draw full tree in blue and purple
         if self.algorithm:
-            for node in self.algorithm.get_nodes():
-                if isinstance(node, Node) and node.parent:
-                    x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
-                    x2, y2 = self.map_to_display(node.x, node.y)
-                    line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
-                    line.setPen(QPen(QColor("blue"), 2))
-                    self.scene.addItem(line)
+            if hasattr(self.algorithm, 'tree_a') and hasattr(self.algorithm, 'tree_b'):
+                # RRT-Connect (two trees)
+                for node in self.algorithm.tree_a:
+                    if isinstance(node, Node) and node.parent:
+                        x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                        x2, y2 = self.map_to_display(node.x, node.y)
+                        line = QGraphicsLineItem(QLineF(x1 + SCALE / 2, y1 + SCALE / 2, x2 + SCALE / 2, y2 + SCALE / 2))
+                        line.setPen(QPen(QColor("blue"), 2))  # Tree A in blue
+                        self.scene.addItem(line)
+                for node in self.algorithm.tree_b:
+                    if isinstance(node, Node) and node.parent:
+                        x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                        x2, y2 = self.map_to_display(node.x, node.y)
+                        line = QGraphicsLineItem(QLineF(x1 + SCALE / 2, y1 + SCALE / 2, x2 + SCALE / 2, y2 + SCALE / 2))
+                        line.setPen(QPen(QColor("purple"), 2))  # Tree B in purple
+                        self.scene.addItem(line)
+
+            else:
+                # Single-tree algorithms (like RRT and RRTBiased)
+                for node in self.algorithm.get_nodes():
+                    if isinstance(node, Node) and node.parent:
+                        x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                        x2, y2 = self.map_to_display(node.x, node.y)
+                        line = QGraphicsLineItem(QLineF(x1 + SCALE / 2, y1 + SCALE / 2, x2 + SCALE / 2, y2 + SCALE / 2))
+                        line.setPen(QPen(QColor("blue"), 2))
+                        self.scene.addItem(line)
 
             # Draw shortest path in green
             if self.algorithm.is_complete():
-                for node in self.algorithm.shortest_path:
-                    if node.parent:
-                        x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
-                        x2, y2 = self.map_to_display(node.x, node.y)
-                        line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
-                        line.setPen(QPen(QColor("green"), 3))
-                        self.scene.addItem(line)
+                if hasattr(self.algorithm, 'path') and self.algorithm.path:
+                    for node in self.algorithm.path:
+                        if node.parent:
+                            x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
+                            x2, y2 = self.map_to_display(node.x, node.y)
+                            line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))
+                            line.setPen(QPen(QColor("green"), 3))
+                            self.scene.addItem(line)
 
         self.update()
 
@@ -190,13 +210,13 @@ class Visualiser(QMainWindow):
     def set_goal(self):
         self.goal_mode = True
         self.start_mode = False
-        
+
     def reset_simulation(self):
         self.stop_auto_iterate()
         self.map.reset()
         self.algorithm = None
         self.draw_map()
-        
+
     def reset_path(self):
         self.stop_auto_iterate()
         if self.algorithm:
@@ -232,7 +252,7 @@ class Visualiser(QMainWindow):
     def start_auto_iterate(self):
         interval = int(self.interval_input.value() * 1000)  # Convert to milliseconds and cast to int
         self.timer.start(interval)
-        
+
     def stop_auto_iterate(self):
         self.timer.stop()
 
@@ -240,7 +260,7 @@ class Visualiser(QMainWindow):
         if self.algorithm is None or self.map.start is None or self.map.goal is None:
             print("Set both start and goal before running the algorithm!")
             return
-        
+
         print("Executing solution...")
         while not self.algorithm.is_complete():
             self.algorithm.step()
@@ -265,7 +285,7 @@ class Visualiser(QMainWindow):
             step_size = self.step_size_input.value()
             self.algorithm.step_size = step_size
         self.draw_map()
-        
+
     def load_map(self):
         self.reset_simulation()
         selected_map = self.map_selector.currentText()

@@ -6,6 +6,7 @@ from core.node import Node
 from benchmarks.benchmark_manager import BenchmarkManager
 from benchmarks.benchmark_result import BenchmarkResult
 
+
 class Algorithm(ABC):
     def __init__(self,
                  map: Map,
@@ -17,6 +18,7 @@ class Algorithm(ABC):
         self.step_size = step_size
         self.start_time = None
         self.benchmark_manager = benchmark_manager
+        self.path = []  # Add path attribute.
 
     @abstractmethod
     def step(self):
@@ -24,20 +26,24 @@ class Algorithm(ABC):
             self.start_benchmark()
 
     def is_complete(self):
-        """
-        Algorithm is complete if the nearest node is within self.step_size
-        distance of the goal.
-        """
-        if self.map.goal is None:
+        """Checks if the algorithm has reached the goal."""
+        if self.map.goal is None:  # No goal defined
             return False
-        
-        last_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-        if last_node is None:
+        # RRT Connect completion condition: check distance between trees.
+        # Need to check if the algorithm class has tree_a and tree_b, otherwise, check the normal way
+        if hasattr(self, 'tree_a') and hasattr(self, 'tree_b'):
+            for node_a in self.tree_a:
+                for node_b in self.tree_b:
+                    if self.distance(node_a.get_position(), node_b.get_position()) < self.step_size:
+                        return True  # Trees are close enough
+            return False  # Trees are not close enough
+        else:
+            # For single tree algorithms
+            nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+            if nearest_node:
+                dist = self.distance(nearest_node.get_position(), (self.map.goal.x, self.map.goal.y))
+                return dist < self.step_size
             return False
-        
-        distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
-        return distance < self.step_size
-
 
     def clear_nodes(self):
         # Usually we would like to keep a start node.
@@ -45,6 +51,18 @@ class Algorithm(ABC):
         if self.map.start:
             start_node = Node(self.map.start.x, self.map.start.y)
             self.nodes.append(start_node)
+        # If it has two trees, clear those.
+        if hasattr(self, 'tree_a'):
+            self.tree_a = []
+            if self.map.start:
+                start_node = Node(self.map.start.x, self.map.start.y)
+                self.tree_a.append(start_node)
+        if hasattr(self, 'tree_b'):
+            self.tree_b = []
+            if self.map.goal:
+                goal_node = Node(self.map.goal.x, self.map.goal.y)
+                self.tree_b.append(goal_node)
+        self.path = []
 
     def get_nodes(self):
         return self.nodes
@@ -73,13 +91,15 @@ class Algorithm(ABC):
             return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax)
 
         return (ccw(x1, y1, x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4)) and \
-               (ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4))
+            (ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4))
 
     def compute_path_length(self):
+        if not self.path:
+            return 0
         length = 0
-        for i in range(1, len(self.nodes)):
-            x1, y1 = self.nodes[i - 1].get_position()
-            x2, y2 = self.nodes[i].get_position()
+        for i in range(1, len(self.path)):
+            x1, y1 = self.path[i - 1].get_position()
+            x2, y2 = self.path[i].get_position()
             length += math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
         return length
 
@@ -95,12 +115,12 @@ class Algorithm(ABC):
                 nearest = node
                 min_dist = dist
         return nearest
-    
+
     def reconstruct_path(self):
         # TODO -> It might not work for PRM
         if self.map.goal is None:
             return
-        
+
         self.shortest_path = []
         node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
 
@@ -108,11 +128,11 @@ class Algorithm(ABC):
             self.shortest_path.append(node)
             node = node.parent
         self.shortest_path.reverse()
-        
+
     def distance(self, pos1, pos2):
         if pos1 is None or pos2 is None:
             return float('inf')
-        return math.sqrt((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)
+        return math.sqrt((pos2[0] - pos1[0]) ** 2 + (pos2[1] - pos1[1]) ** 2)
 
     def start_benchmark(self):
         if self.start_time is None and self.benchmark_manager is not None:

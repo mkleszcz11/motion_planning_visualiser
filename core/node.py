@@ -8,8 +8,13 @@ class Node:
     def __str__(self):
         return f"Node at ({self.x}, {self.y})"
 
+    def get_position(self):
+        return self.x, self.y
+
     def add_child(self, child):
         self.children.append(child)
 
-    def get_position(self):
-        return (self.x, self.y)
+    def remove_child(self, child_node):
+        """Removes a child from the node's children list."""
+        if child_node in self.children:
+            self.children.remove(child_node)
