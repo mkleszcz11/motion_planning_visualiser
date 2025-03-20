@@ -8,6 +8,7 @@ from PyQt5.QtGui import QPen, QColor
 
 from core.map import Map
 from core.node import Node
+from core.logger import logger
 
 from algorithms.algorithm_manager import AlgorithmManager
 from maps.maps_manager import MapsManager
@@ -32,7 +33,6 @@ class Visualiser(QMainWindow):
         self.algorithm_selector = QComboBox()
         for algo in self.algorithm_manager.algorithms:
             self.algorithm_selector.addItem(algo["name"])
-        
         self.algorithm_selector.currentIndexChanged.connect(self.select_algorithm)
 
         # Map selection dropdown
@@ -117,6 +117,7 @@ class Visualiser(QMainWindow):
         self.view.mousePressEvent = self.on_mouse_press
 
         self.load_map()
+        self.select_algorithm() # This must be called after load_map, as it needs start and goal points
         self.draw_map()
 
     def map_to_display(self, x, y):
@@ -133,6 +134,9 @@ class Visualiser(QMainWindow):
             # Step size is 4, which means if my algorithm is 4 units away from
             # the goal it is considered as done, point "diameter" should be 8
             point_size = self.algorithm.step_size * 2 * SCALE
+        else:
+            point_size = 1
+            logger.error("Algorithm not defined!")
 
         # Draw obstacles
         for ox, oy, w, h in self.map.get_obstacles():
@@ -194,7 +198,7 @@ class Visualiser(QMainWindow):
     def reset_simulation(self):
         self.stop_auto_iterate()
         self.map.reset()
-        self.algorithm = None
+        # self.algorithm = None
         self.draw_map()
         
     def reset_path(self):
@@ -213,7 +217,7 @@ class Visualiser(QMainWindow):
     def iterate(self):
         # Only run if algorithm is defined and both start/goal points are set
         if self.algorithm is None or self.map.start is None or self.map.goal is None:
-            print("Set both start and goal before running the algorithm!")
+            logger.warning("Set both start and goal before running the algorithm!")
             return
 
         steps = self.step_input.value()
@@ -221,7 +225,7 @@ class Visualiser(QMainWindow):
             if not self.algorithm.is_complete():
                 self.algorithm.step()
             else:
-                print("Goal reached!")
+                logger.info("Goal reached!")
                 # Force one last draw to display final segment
                 self.draw_map()
                 return
@@ -238,14 +242,14 @@ class Visualiser(QMainWindow):
 
     def execute_till_solution(self):
         if self.algorithm is None or self.map.start is None or self.map.goal is None:
-            print("Set both start and goal before running the algorithm!")
+            logger.warning("Set both start and goal before running the algorithm!")
             return
         
-        print("Executing solution...")
+        logger.info("Executing solution...")
         while not self.algorithm.is_complete():
             self.algorithm.step()
 
-        print("Goal reached!")
+        logger.info("Goal reached!")
         self.draw_map()  # Final update to show the last segment
 
     def select_algorithm(self):
@@ -264,6 +268,7 @@ class Visualiser(QMainWindow):
             )
             step_size = self.step_size_input.value()
             self.algorithm.step_size = step_size
+            
         self.draw_map()
         
     def load_map(self):
@@ -275,6 +280,8 @@ class Visualiser(QMainWindow):
             self.map = Map(map_config.width, map_config.height)
             for obs in map_config.obstacles:
                 self.map.add_obstacle(*obs)
+            self.map.set_start(map_config.default_start[0], map_config.default_start[1])
+            self.map.set_goal(map_config.default_goal[0], map_config.default_goal[1])
 
         self.draw_map()
 

@@ -4,6 +4,8 @@ simple_map = MapConfig(
     name='Simple Map',
     width=100,  # KEEP IT AS 100
     height=100, # KEEP IT AS 100
+    default_start=(10, 10), # This value is also used in tests
+    default_goal=(90, 90),  # This value is also used in tests
     obstacles=[
         (0, 0, 5, 5),   # Top-left corner
         (95, 0, 5, 5),  # Top-right corner

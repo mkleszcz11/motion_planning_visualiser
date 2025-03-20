@@ -17,25 +17,32 @@ The Motion Planner Visualizer is designed to:
 ## 📁 Project Structure
 ```bash
 motion_planner_visualizer/
-├── algorithms/
+├── algorithms/                  
 │   ├── algorithm_manager.py        # Handles algorithm registration and selection
 │   ├── algorithms_implementations/ # Implementations of different algorithms
-├── benchmarks/
+├── benchmarks/                    
 │   ├── benchmark_manager.py        # Handles benchmark execution and storage
 │   ├── benchmark_result.py         # Stores benchmark results
-├── core/
+├── core/                          
 │   ├── algorithm.py                # Base class for defining algorithms
+│   ├── logger.py                   # Handles logging across the project
 │   ├── map.py                      # Handles map structure and properties
 │   ├── maps_manager.py             # Handles map registration and loading
-|   ├── node.py                     # Data structure for nodes
-├── gui/
-│   ├── visualiser.py               # Main PyQt5 visualizer window
-├── maps/
+│   ├── node.py                     # Data structure for nodes
+├── gui/                           
+│   ├── visualiser.py               # Main PyQt5 visualiser window
+├── maps/                          
 │   ├── map_config.py               # Data structure for map properties
 │   ├── maps_manager.py             # Handles loading and registration of maps
-│   ├── maps/                       # Map files
-├── algorithms_tests/               # TODO - automatic tests for algorithms
-├── main.py                         # Entry point for running the project
+│   ├── maps/                       # Map files (narrow_passage, maze, etc.)
+├── test_runner/                   
+│   ├── combine_heatmaps.py         # Combines heatmaps into a single comparison image
+│   ├── test_runner.py              # Runs benchmark tests and saves results
+│   ├── test_analyse.py             # Generates comparison tables and heatmaps
+│   ├── logs/                       # Logs from test runs
+│   ├── results/                    # Stores benchmark results and heatmaps
+├── gui_main.py                     # Entry point for running the GUI
+├── run_tests.py                    # Entry point for running the test runner
 ├── requirements.txt                # List of dependencies
 └── README.md                       # Project documentation
 ```
@@ -73,9 +80,9 @@ Windows:
 pip install -r requirements.txt
 ```
 
-### 4. Run the Project  
+### 4. Run the Project (GUI)  
 ```bash
-python main.py
+python gui_main.py
 ```
 
 ---
@@ -131,7 +138,8 @@ python main.py
 ---
 
 ## Benchmarking:
-Benchmarking allows you to compare the performance of different algorithms on different maps.
+Benchmarking allows you to compare the performance of different algorithms on different maps. They are essential to run the algorithm in automatic tests and compare their performance.
+
 Currently we measure the following metrics:
  * Execution Time
  * Number of Nodes Expanded
@@ -143,11 +151,26 @@ To run a benchmark mechanism to start and finish a benachmark must be implemente
 
 Note: For now time measurement in Benchamark might not be reliable, we are not measuring only the algorithm execution time but also the GUI update time and other stuff.
 TODO -> Investgate how to measure only the algorithm execution time.
-
-TODO -> The benchmark results are stored in a `BenchmarkResult` object and can be exported to a CSV file.
 ---
 
-## Test Different Algorithms:
- TODO
- This interface allows you to test different algorithms and compare their performance on different maps.
- 
+## Testing and Comparison:
+ This interface allows to test different algorithms and compare their performance on different maps.
+
+ ### How to Run Tests:
+```bash
+python run_tests.py
+```
+
+* The test runner will execute the algorithms on the selected maps and store the results in a CSV file.
+* Once finished, it will automatically analyse the results and generate comparison tables and heatmaps.
+
+ ### Example Config for `run_tests.py`:
+```python
+test_runner = TestRunner(
+    algorithms=['RRT', 'Biased Random Walk'],
+    maps=['Cluttered Map', 'Rooms Map'],
+    runs_per_test=3,
+    step_size=5,
+    output_file="benchmark_results.csv",
+)
+```
