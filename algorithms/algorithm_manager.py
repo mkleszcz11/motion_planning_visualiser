@@ -13,6 +13,7 @@ from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorith
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
 from algorithms.algorithms_implementations.prm_star_hybrid import HybridSamplingPRMStarAlgorithm
+from algorithms.algorithms_implementations.f_rrt_star import FRRTStarAlgorithm
 
 algorithms = [
     {
@@ -34,6 +35,10 @@ algorithms = [
     {
         "name": "RRT*",
         "algorithm": RRTStarAlgorithm
+    },
+    {
+        "name": "F-RRT*",
+        "algorithm": FRRTStarAlgorithm
     },
     {
         "name": "RRT, Biased",
