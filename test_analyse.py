@@ -8,6 +8,8 @@ import numpy as np
 
 RESULTS_DIR = 'test_runner/results/'
 
+
+
 class TestAnalyser:
     def __init__(self, filename):
         self.filepath = os.path.join(RESULTS_DIR, filename)
@@ -54,6 +56,10 @@ class TestAnalyser:
                 plt.title(f"{algorithm} - {map_name}")
                 plt.xlim(0, map_config.width)
                 plt.ylim(0, map_config.height)
+
+                #Draw start and end positions
+                plt.scatter(map_config.default_start[0], map_config.default_start[1], color='red', s=100)
+                plt.scatter(map_config.default_goal[0], map_config.default_goal[1], color='green', s=100)
 
                 output_path = os.path.join(RESULTS_DIR, f"heatmap_{algorithm}_{map_name}.png")
                 plt.savefig(output_path)
@@ -112,6 +118,10 @@ class TestAnalyser:
                 plt.title(f"{algorithm} - {map_name}")
                 plt.xlim(0, map_config.width)
                 plt.ylim(0, map_config.height)
+
+                # ✅ Step 7: Draw start and end positions
+                plt.scatter(map_config.default_start[0], map_config.default_start[1], color='red', s=100)
+                plt.scatter(map_config.default_goal[0], map_config.default_goal[1], color='green', s=100)
 
                 output_path = os.path.join(RESULTS_DIR, f"heatmap_v2_{algorithm}_{map_name}.png")
                 plt.savefig(output_path)
