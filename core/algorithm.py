@@ -31,11 +31,11 @@ class Algorithm(ABC):
         """
         if self.map.goal is None:
             return False
-        
+
         last_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
         if last_node is None:
             return False
-        
+
         distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
         return distance < self.step_size
 
@@ -96,7 +96,8 @@ class Algorithm(ABC):
                 nearest = node
                 min_dist = dist
         return nearest
-    
+
+    # TODO -> It might not work for PRM
     def reconstruct_path(self):
         # TODO -> It might not work for PRM
         logger.info("Reconstructing path...")
@@ -106,12 +107,14 @@ class Algorithm(ABC):
         logger.info("Calculating shortest path...")
         self.shortest_path = []
         node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+        if node is None: # ADDED THIS
+            return
 
         while node is not None:
             self.shortest_path.append(node)
             node = node.parent
         self.shortest_path.reverse()
-        
+
     def distance(self, pos1, pos2):
         if pos1 is None or pos2 is None:
             return float('inf')
@@ -146,5 +149,5 @@ class Algorithm(ABC):
         )
 
         self.benchmark_manager.add_result(result)
-        self.benchmark_manager.print_results()
+        #self.benchmark_manager.print_results()
         # logger.info(f"Benchmark completed for {self.__class__.__name__}")
