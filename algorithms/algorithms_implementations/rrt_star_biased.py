@@ -7,17 +7,18 @@ BIAS = 0.3
 
 class RRTStarBiasedAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None, enable_rewiring=True, enable_shortcut=True,
-                 enable_restarting=True, restart_threshold=0.01, max_restarts=100):
+                 enable_restarting=False, restart_threshold=0.01, max_restarts = 100):
         super().__init__(map=map, benchmark_manager=benchmark_manager)
         self.enable_rewiring = enable_rewiring
         self.enable_shortcut = enable_shortcut
         self.enable_restarting = enable_restarting
-        self.best_path_cost = float('inf')  # Track the best path cost found so far
+        self.best_path_cost = float('inf')
         self.path_found = False
-        self.iterations_since_improvement = 0  # Track iterations without improvement
-        self.restart_threshold = restart_threshold  # Threshold for restarting (relative improvement)
-        self.restart_count = 0 # counter
-        self.max_restarts = max_restarts # maximum number of restarts
+        self.iterations_since_improvement = 0
+        self.restart_threshold = restart_threshold
+        self.restart_count = 0
+        self.max_restarts = max_restarts
+        self.path = []  # Path for shortcutting
 
 
         if map.start:
@@ -25,73 +26,110 @@ class RRTStarBiasedAlgorithm(Algorithm):
             self.nodes.append(start_node)
 
     def step(self):
+        print("==== Entering step() ====")  # Clear separator
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_benchmark()
 
-        # 1. Sample a random point (with goal bias)
         q_rand = self.get_random_sample()
+        print(f"  q_rand: {q_rand}")
 
-        # 2. Find the nearest node in the tree
         q_nearest = self.get_nearest_node(q_rand)
+        print(f"  q_nearest: {q_nearest}")
 
-        # 3. Steer from q_nearest towards q_rand
         q_new = self.extend_toward(q_nearest, q_rand)
+        print(f"  q_new: {q_new}")
 
         if q_new is None:
+            print("  q_new is None. Returning.")
             return
 
+        print(f"  Checking collision for q_new: ({q_new.x}, {q_new.y})")
         if not self.is_collision(q_new.x, q_new.y):
-            # --- RRT* Specific Steps ---
+            print("    q_new is collision-free")
             q_near_nodes = self.get_near_nodes(q_new)
+            print(f"    q_near_nodes: {q_near_nodes}")
             q_min = q_nearest
+            print(f"    q_min (initial): {q_min}")
             c_min = self.cost(q_nearest) + self.distance(q_nearest.get_position(), q_new.get_position())
+            print(f"    c_min: {c_min}")
 
-            for q_near in q_near_nodes:
+            print("    Entering loop over q_near_nodes")
+            for i, q_near in enumerate(q_near_nodes):  # Add index for clarity
+                print(f"      Loop {i}: q_near: {q_near}")
+                print(f"      Checking edge collision: ({q_near.x}, {q_near.y}) to ({q_new.x}, {q_new.y})")
                 if not self.is_edge_collision(q_near.x, q_near.y, q_new.x, q_new.y):
+                    print("        Edge is collision-free")
                     c_near = self.cost(q_near) + self.distance(q_near.get_position(), q_new.get_position())
+                    print(f"        c_near: {c_near}")
                     if c_near < c_min:
+                        print("        c_near < c_min: True")
                         c_min = c_near
                         q_min = q_near
+                        print(f"        New q_min: {q_min}")
+                    else:
+                        print("        c_near < c_min: False")
+                else:
+                    print("        Edge collision detected!")
+            print("    Exiting loop over q_near_nodes")
 
+            print(f"    Before rewiring: q_new.parent = {q_new.parent}")
+            if q_new.parent:
+                print(f"      Removing q_new from parent: {q_new.parent}")
+                q_new.parent.remove_child(q_new)
             q_new.parent = q_min
+            print(f"    q_new.parent set to: {q_min}")
             q_min.add_child(q_new)
+            print(f"    q_new added as child of: {q_min}")
             self.nodes.append(q_new)
+            print(f"    q_new added to self.nodes.  len(self.nodes) = {len(self.nodes)}")
 
             if self.enable_rewiring:
-                for q_near in q_near_nodes:
-                    if not self.is_edge_collision(q_new.x, q_new.y, q_near.x, q_near.y):
-                        c_new = self.cost(q_new) + self.distance(q_new.get_position(), q_near.get_position())
-                        if c_new < self.cost(q_near):
-                            if q_near.parent is not None:
-                                q_near.parent.remove_child(q_near)
-                            q_near.parent = q_new
-                            q_new.add_child(q_near)
+                print("    Entering rewire_tree()")
+                self.rewire_tree(q_new, q_near_nodes)  # Call the function
+                print("    Exiting rewire_tree()")
+
             self.steps += 1
-            if self.is_complete():
-                self.path_found = True
+            print(f"    Steps incremented: {self.steps}")
 
-        # --- Actions AFTER a path is found ---
-        if self.path_found:
-            if self.enable_rewiring:
-                self.rewire_tree()
+            if self.is_complete():  # <--- Correct Placement
+                print("    Entering is_complete() block")
+                self.reconstruct_path()  # <--- reconstruct path *only* if complete
+                if self.enable_shortcut:
+                    print("      Entering shortcut_path()")
+                    self.shortcut_path()
+                    print("      Exiting shortcut_path()")
 
-            if self.enable_shortcut:
-                self.shortcut_path()
-
-            if self.enable_restarting:
-                current_cost = self.cost(self.get_nearest_node((self.map.goal.x, self.map.goal.y)))
-                if current_cost < self.best_path_cost * (1 - self.restart_threshold):
+                current_cost = self.compute_path_length()
+                print(f"      Current cost: {current_cost}")
+                if not self.path_found or current_cost < self.best_path_cost:
+                    print("      New best path found!")
                     self.best_path_cost = current_cost
+                    self.path_found = True
                     self.iterations_since_improvement = 0
                 else:
-                    self.iterations_since_improvement += 1
-                if self.iterations_since_improvement > 100 and self.restart_count < self.max_restarts:
-                    self.restart()
-            self.reconstruct_path()  # Always reconstruct after potential changes
-            self.finalize_benchmark()
+                     print("      No improvement")
+
+                if self.enable_restarting:
+                    if current_cost >= self.best_path_cost * (1 + self.restart_threshold):
+                         self.iterations_since_improvement += 1
+                    else:
+                        self.iterations_since_improvement = 0
+
+                    if self.iterations_since_improvement > 100 and self.restart_count < self.max_restarts:
+                        print("        Restarting...")
+                        self.restart()
+                print("  Before finalize_benchmark()") # Moved print
+                self.finalize_benchmark() # Called *only* if complete!
+            else:
+                print("Not complete")
+
+        # REMOVED ELSE statement
+
+        # self.finalize_benchmark()  <--- REMOVE THIS LINE.  It's in the wrong place!
+        print("==== Exiting step() ====")
 
     def get_random_sample(self):
-        # Goal biasing
+        # Introduce goal bias
         if self.map.goal and random.random() < BIAS:
             return (self.map.goal.x, self.map.goal.y)
         else:
@@ -109,6 +147,8 @@ class RRTStarBiasedAlgorithm(Algorithm):
 
     def get_near_nodes(self, q_new):
         radius = self.calculate_radius()
+        if not math.isfinite(radius):
+            radius = 10 * self.step_size
         near_nodes = []
         for node in self.nodes:
             if self.distance(node.get_position(), q_new.get_position()) < radius:
@@ -122,7 +162,7 @@ class RRTStarBiasedAlgorithm(Algorithm):
         d = 2
         gamma = self.calculate_gamma()
         radius = gamma * (math.log(n) / n)**(1/d)
-        return min(radius, self.step_size)
+        return min(radius, 10*self.step_size)
 
     def calculate_gamma(self):
         d = 2
@@ -130,66 +170,86 @@ class RRTStarBiasedAlgorithm(Algorithm):
         gamma = 2 * (1 + 1/d)**(1/d) * (self.map.width * self.map.height / zeta_d)**(1/d)
         return gamma
 
-    def cost(self, node):
+    def cost(self, node, depth=0):
+        if depth > 1000:
+            print("ERROR: cost() recursion depth exceeded!")
+            return float('inf')
+
         cost = 0
         current = node
-        while current is not None and current.parent is not None:  # Check for None here
+        while current.parent is not None:
             cost += self.distance(current.get_position(), current.parent.get_position())
             current = current.parent
+            depth += 1
         return cost
 
-    def rewire_tree(self):
-        for node in list(self.nodes):  # Iterate over a *copy* of the list
-            if node.parent is not None:
-                near_nodes = self.get_near_nodes(node)
-                for near_node in near_nodes:
-                    if not self.is_edge_collision(node.x, node.y, near_node.x, near_node.y):
-                        new_cost = self.cost(near_node) + self.distance(near_node.get_position(), node.get_position())
-                        if new_cost < self.cost(node):
-                            node.parent.remove_child(node)
-                            node.parent = near_node
-                            near_node.add_child(node)
+    def rewire_tree(self, q_new, q_near_nodes):  # Pass q_new and near nodes
+        for q_near in q_near_nodes:
+            if not self.is_edge_collision(q_new.x, q_new.y, q_near.x, q_near.y):
+                c_new = self.cost(q_new) + self.distance(q_new.get_position(), q_near.get_position())
+                if c_new < self.cost(q_near):
+                    if q_near.parent:
+                        q_near.parent.remove_child(q_near)
+                    q_near.parent = q_new
+                    q_new.add_child(q_near)  # Correctly add child
+
 
     def shortcut_path(self):
-        if len(self.path) < 3:
+        if self.path is None or len(self.path) < 3:
             return
 
-        for i in range(len(self.path) - 2):
-            for j in range(i + 2, len(self.path)):
+        i = 0
+        while i < len(self.path) - 2:
+            j = i + 2
+            while j < len(self.path):
                 if not self.is_edge_collision(self.path[i].x, self.path[i].y, self.path[j].x, self.path[j].y):
-                    # Check for collision-free connection and better cost
-                    if self.cost(self.path[i]) + self.distance(self.path[i].get_position(), self.path[j].get_position()) < self.cost(self.path[j]):
-                        if self.path[j].parent is not None:
-                            self.path[j].parent.remove_child(self.path[j])
-                        self.path[i].add_child(self.path[j])
-                        self.path[j].parent = self.path[i]
+                    new_parent = self.path[i]
+                    child_to_reconnect = self.path[j]
 
+                    for k in range(i + 1, j):
+                        if self.path[k].parent:
+                            self.path[k].parent.remove_child(self.path[k])
+
+                    new_parent.add_child(child_to_reconnect)
+                    child_to_reconnect.parent = new_parent
+
+                    temp_path = []
+                    current = child_to_reconnect
+                    while current != new_parent:
+                        temp_path.append(current)
+                        current = current.parent
+                    temp_path.append(new_parent)
+                    temp_path.reverse()
+
+                    self.path = self.path[:i+1] + temp_path + self.path[j+1:]
+                    j = i + 2
+                else:
+                    j += 1
+            i += 1
 
     def restart(self):
-        #print("Restarting...") # Removed for cleaner output
         self.nodes = []
         if self.map.start:
-            start_node = Node(map.start.x, map.start.y)
+            start_node = Node(self.map.start.x, map.start.y)
             self.nodes.append(start_node)
         self.path = []
         self.path_found = False
         self.iterations_since_improvement = 0
         self.restart_count += 1
 
-    def reconstruct_path(self):
-        if self.map.goal is None:
-            return
-
-        self.path = []
-        nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-        if nearest_node is None:
-            return
-
-        if self.distance(nearest_node.get_position(), (self.map.goal.x, self.map.goal.y)) >= self.step_size:
-            return
-
-        node = nearest_node
-        while node is not None:
-            self.path.append(node)
-            node = node.parent
-        self.path.reverse()
+    # def reconstruct_path(self):
+    #     logger.info("Reconstructing path...")
+    #     if self.map.goal is None:
+    #         return
+    #
+    #     logger.info("Calculating shortest path...")
+    #     self.shortest_path = []
+    #     node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+    #     if node is None:  # CRITICAL: Handle the case where no path is found
+    #         logger.warning("No path found to goal.")
+    #         return
+    #
+    #     while node is not None:
+    #         self.shortest_path.append(node)
+    #         node = node.parent
+    #     self.shortest_path.reverse()
