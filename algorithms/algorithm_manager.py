@@ -9,6 +9,10 @@ from algorithms.algorithms_implementations.random_walk import RandomWalkAlgorith
 from algorithms.algorithms_implementations.random_walk_biased import RandomWalkBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt import RRTAlgorithm
 from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
+from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
+from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
+from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
+from algorithms.algorithms_implementations.prm_star_hybrid import HybridSamplingPRMStarAlgorithm
 
 algorithms = [
     {
@@ -16,7 +20,7 @@ algorithms = [
         "algorithm": RandomWalkAlgorithm
     },
     {
-        "name": "Biased Random Walk",
+        "name": "Random Walk, Biased",
         "algorithm": RandomWalkBiasedAlgorithm
     },
     {
@@ -24,9 +28,26 @@ algorithms = [
         "algorithm": RRTAlgorithm
     },
     {
-        "name": "Biased RRT",
+        "name": "RRT-Connect",
+        "algorithm": RRTConnectAlgorithm
+    },
+    {
+        "name": "RRT*",
+        "algorithm": RRTStarAlgorithm
+    },
+    {
+        "name": "RRT, Biased",
         "algorithm": RRTBiasedAlgorithm
+    },
+    {
+        "name": "RRT*, Biased",
+        "algorithm": RRTStarBiasedAlgorithm
+    },
+    {
+        "name": "PRM*, Hybrid",
+        "algorithm": HybridSamplingPRMStarAlgorithm
     }
+    
 ]
 
 class AlgorithmManager:
