@@ -9,14 +9,16 @@ from maps.maps.cluttered import cluttered
 from maps.maps.open_space import open_space
 from maps.maps.zig_zag import zig_zag
 from maps.maps.island import island
+from maps.maps.dense_map import map_dense
 
 class MapsManager:
     def __init__(self):
         self.maps = [
-            {"name": "Simple Map", "map": simple_map},
-            {"name": "Simple Map V2", "map": simple_map_2},
-            {"name": "Narrow Passage", "map": narrow_passage},
-            {"name": "Rooms Map", "map": rooms},
+            {"name": "Simple Map V1"  , "map": simple_map},
+            {"name": "Simple Map V2"  , "map": simple_map_2},
+            {"name": "Rooms"          , "map": rooms},
+            {"name": "Dense Obstacles", "map": map_dense},
+            {"name": "Narrow Passage" , "map": narrow_passage},
             {"name": "Maze Map", "map": maze},
             {"name": "Cluttered Map", "map": cluttered},
             {"name": "Open Space", "map": open_space},
