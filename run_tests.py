@@ -9,17 +9,18 @@ import os
 if __name__ == "__main__":
     ### CONFIGURE TEST RUNNER ###
     test_runner = TestRunner(
-        algorithms=['RRT', 'Biased Random Walk'],
-        maps=['Cluttered Map', 'Rooms Map'],
-        runs_per_test=3,
-        step_size=5,
-        output_file="benchmark_results.csv",
+        # algorithms=['RRT', 'Biased Random Walk'],
+        # maps=['Simple Map', 'Simple Map V2'],
+        algorithms=['RRT','RRT, Biased','RRT*','RRT*, Biased'],
+        maps=['Cluttered Map', 'Rooms'],
+        runs_per_test = 10,
+        step_size = 5.0,
+        output_file="benchmark_results.csv"
     )
 
     ### RUN TESTS AND ANALYSIS ###
     logger.info("Running tests...")
     test_runner.run_tests()
-    
     logger.info("Running test analysis...")
     
     analyser = TestAnalyser('benchmark_results.csv')
