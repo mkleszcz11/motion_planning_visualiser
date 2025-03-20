@@ -99,9 +99,11 @@ class Algorithm(ABC):
     
     def reconstruct_path(self):
         # TODO -> It might not work for PRM
+        logger.info("Reconstructing path...")
         if self.map.goal is None:
             return
-        
+
+        logger.info("Calculating shortest path...")
         self.shortest_path = []
         node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
 
