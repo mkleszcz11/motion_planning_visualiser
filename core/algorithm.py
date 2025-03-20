@@ -5,6 +5,7 @@ from core.map import Map
 from core.node import Node
 from benchmarks.benchmark_manager import BenchmarkManager
 from benchmarks.benchmark_result import BenchmarkResult
+from core.logger import logger
 
 class Algorithm(ABC):
     def __init__(self,
@@ -117,15 +118,15 @@ class Algorithm(ABC):
     def start_benchmark(self):
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_time = time.time()
-            print(f"Benchmark started for {self.__class__.__name__}")
+            # logger.info(f"Benchmark started for {self.__class__.__name__}")
 
     def finalize_benchmark(self):
         if self.benchmark_manager is None:
-            print(f"No benchmark specified!")
+            logger.warning(f"No benchmark specified!")
             return
 
         if self.start_time is None:
-            print(f"Time is not running!")
+            logger.warning(f"Time is not running!")
             return
 
         execution_time = time.time() - self.start_time
@@ -135,9 +136,10 @@ class Algorithm(ABC):
             algorithm_name=self.__class__.__name__,
             path_length=path_length,
             steps=self.steps,
-            execution_time=execution_time
+            execution_time=execution_time,
+            path=self.shortest_path
         )
 
         self.benchmark_manager.add_result(result)
         self.benchmark_manager.print_results()
-        print(f"Benchmark completed for {self.__class__.__name__}")
+        # logger.info(f"Benchmark completed for {self.__class__.__name__}")

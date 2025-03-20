@@ -3,7 +3,7 @@ import math
 from core.algorithm import Algorithm
 from core.node import Node
 
-BIAS = 0.5
+BIAS = 0.4
 
 class RandomWalkBiasedAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):
@@ -19,7 +19,9 @@ class RandomWalkBiasedAlgorithm(Algorithm):
 
         if self.is_complete():
             if self.map.goal and self.get_nearest_node((self.map.goal.x, self.map.goal.y)) not in self.nodes:
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
+                nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+                goal_node = Node(self.map.goal.x, self.map.goal.y, parent=nearest_node)  # ✅ Link goal to tree
+                nearest_node.add_child(goal_node)
                 self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()
@@ -32,7 +34,6 @@ class RandomWalkBiasedAlgorithm(Algorithm):
         
         # Introduce bias, from time to time, move towards the goal
         if random.random() < BIAS and self.map.goal:
-            print("Biasing towards goal")
             vector = (self.map.goal.x - last_node.x, self.map.goal.y - last_node.y)
             dir_x = vector[0] / math.sqrt(vector[0]**2 + vector[1]**2)
             dir_y = vector[1] / math.sqrt(vector[0]**2 + vector[1]**2)
@@ -52,7 +53,9 @@ class RandomWalkBiasedAlgorithm(Algorithm):
             self.steps += 1
 
             if self.is_complete():
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
+                nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+                goal_node = Node(self.map.goal.x, self.map.goal.y, parent=nearest_node)  # ✅ Link goal node
+                nearest_node.add_child(goal_node)
                 self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()

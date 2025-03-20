@@ -4,6 +4,8 @@ simple_map_2 = MapConfig(
     name='Simple Map 2',
     width=100,  # KEEP IT AS 100
     height=100, # KEEP IT AS 100
+    default_start=(10, 40),
+    default_goal=(90, 50),
     obstacles=[
         (5, 5, 8, 8),
         (20, 10, 12, 6),

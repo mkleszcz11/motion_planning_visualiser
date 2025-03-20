@@ -27,15 +27,16 @@ motion_planner_visualizer/
 │   ├── algorithm.py                # Base class for defining algorithms
 │   ├── map.py                      # Handles map structure and properties
 │   ├── maps_manager.py             # Handles map registration and loading
-|   ├── node.py                     # Data structure for nodes
+│   ├── node.py                     # Data structure for nodes
 ├── gui/
 │   ├── visualiser.py               # Main PyQt5 visualizer window
 ├── maps/
 │   ├── map_config.py               # Data structure for map properties
 │   ├── maps_manager.py             # Handles loading and registration of maps
 │   ├── maps/                       # Map files
-├── algorithms_tests/               # TODO - automatic tests for algorithms
-├── main.py                         # Entry point for running the project
+├── test_runner/                    # Test runner to compare algorithms
+├── gui_main.py                     # Entry point for running the GUI
+├── run_tests.py                    # Entry point for running the test runner
 ├── requirements.txt                # List of dependencies
 └── README.md                       # Project documentation
 ```
@@ -73,9 +74,9 @@ Windows:
 pip install -r requirements.txt
 ```
 
-### 4. Run the Project  
+### 4. Run the Project (GUI)  
 ```bash
-python main.py
+python gui_main.py
 ```
 
 ---
