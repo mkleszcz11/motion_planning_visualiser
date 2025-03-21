@@ -39,7 +39,6 @@ class Algorithm(ABC):
         distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
         return distance < self.step_size
 
-
     def clear_nodes(self):
         # Usually we would like to keep a start node.
         self.nodes = []
