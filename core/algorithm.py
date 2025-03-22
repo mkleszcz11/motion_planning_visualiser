@@ -39,7 +39,6 @@ class Algorithm(ABC):
         distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
         return distance < self.step_size
 
-
     def clear_nodes(self):
         # Usually we would like to keep a start node.
         self.nodes = []
@@ -51,12 +50,18 @@ class Algorithm(ABC):
         return self.nodes
 
     def is_collision(self, x, y):
+        """
+        Check if the point (x, y) is inside an obstacle.
+        """
         for ox, oy, w, h in self.map.get_obstacles():
             if ox <= x <= ox + w and oy <= y <= oy + h:
                 return True
         return False
 
     def is_edge_collision(self, x1, y1, x2, y2):
+        """
+        Check if the line segment (x1, y1) to (x2, y2) intersects with any obstacle.
+        """
         for ox, oy, w, h in self.map.get_obstacles():
             edges = [
                 ((ox, oy), (ox + w, oy)),
