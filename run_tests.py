@@ -11,10 +11,11 @@ if __name__ == "__main__":
     test_runner = TestRunner(
         # algorithms=['RRT', 'Biased Random Walk'],
         # maps=['Simple Map', 'Simple Map V2'],
-        algorithms=['RRT','RRT, Biased','RRT*','RRT*, Biased'],
+        # algorithms=['RRT','RRT, Biased','RRT*','RRT*, Biased'],
+        algorithms=["RRT", "RRT*", "RRT*, V2"],
         maps=['Cluttered Map', 'Rooms'],
         runs_per_test = 10,
-        step_size = 5.0,
+        step_size = 8.0,
         output_file="benchmark_results.csv"
     )
 

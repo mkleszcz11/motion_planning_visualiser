@@ -1,11 +1,11 @@
 from core.node import Node
 
 class Map:
-    def __init__(self, width, height):
+    def __init__(self, width, height, start=None, goal=None):
         self.width = float(width)
         self.height = float(height)
-        self.start = None
-        self.goal = None
+        self.start = start
+        self.goal = goal
         self.obstacles = []
 
     def set_start(self, x, y):

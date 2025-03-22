@@ -2,9 +2,11 @@ import random
 import math
 from core.algorithm import Algorithm
 from core.node import Node
+from core.map import Map
+from benchmarks.benchmark_manager import BenchmarkManager
 
-class RRTAlgorithm(Algorithm):
-    def __init__(self, map, benchmark_manager=None):
+class RRTStarV2Algorithm(Algorithm):
+    def __init__(self, map: Map, benchmark_manager: BenchmarkManager = None):
         super().__init__(map = map,
                          benchmark_manager = benchmark_manager)
         if map.start:
@@ -31,6 +33,8 @@ class RRTAlgorithm(Algorithm):
                 nearest_node.add_child(new_node)
                 self.nodes.append(new_node)
                 self.steps += 1
+                
+                self.rewire_tree(new_node)
 
                 if self.is_complete():
                     self.reconstruct_path()
@@ -39,7 +43,7 @@ class RRTAlgorithm(Algorithm):
     def get_random_sample(self):
         return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
 
-    def extend_toward(self, from_node, to_position):
+    def extend_toward(self, from_node: Node, to_position: tuple):
         dist = self.distance(from_node.get_position(), to_position)
         if dist < self.step_size:
             return Node(to_position[0], to_position[1], from_node)
@@ -48,3 +52,22 @@ class RRTAlgorithm(Algorithm):
             new_x = from_node.x + self.step_size * math.cos(theta)
             new_y = from_node.y + self.step_size * math.sin(theta)
             return Node(new_x, new_y, from_node)
+
+    def rewire_tree(self, new_node: Node):
+        radius = self.step_size * 3 # TODO -> might be calculated in a fancy way
+        nodes_to_rewire = self.get_near_nodes(new_node, radius)
+        for node in nodes_to_rewire:
+            if not self.is_edge_collision(node.x, node.y, new_node.x, new_node.y):
+                if node.cost + self.distance(node.get_position(), new_node.get_position()) < new_node.cost:
+                    new_node.parent = node
+                    new_node.cost = node.cost + self.distance(node.get_position(), new_node.get_position())
+
+    def get_near_nodes(self, node: Node, radius: float) -> list[Node]:
+        near_nodes = []
+        for potential_node in self.nodes:
+            if potential_node == node:
+                continue
+            if self.distance(potential_node.get_position(), node.get_position()) < radius:
+                near_nodes.append(potential_node)
+        return near_nodes
+        

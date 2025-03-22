@@ -277,12 +277,14 @@ class Visualiser(QMainWindow):
 
         map_config = self.maps_manager.get_map(selected_map)
         if map_config:
-            self.map = Map(map_config.width, map_config.height)
+            self.map = Map(map_config.width, map_config.height, map_config.default_start, map_config.default_goal)
             for obs in map_config.obstacles:
                 self.map.add_obstacle(*obs)
             self.map.set_start(map_config.default_start[0], map_config.default_start[1])
             self.map.set_goal(map_config.default_goal[0], map_config.default_goal[1])
 
+        # Algorithm must be re-initialised when map is changed due to new start and goal points
+        self.initialise_algorithm()
         self.draw_map()
 
     def on_mouse_press(self, event):
