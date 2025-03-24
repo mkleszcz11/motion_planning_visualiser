@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt, QRectF, QLineF, QTimer
 from PyQt5.QtGui import QPen, QColor
 
 from core.map import Map
-from core.node import Node
+from core.node import TreeNode
 from core.logger import logger
 
 from algorithms.algorithm_manager import AlgorithmManager
@@ -163,7 +163,7 @@ class Visualiser(QMainWindow):
         # Draw full tree in blue
         if self.algorithm:
             for node in self.algorithm.get_nodes():
-                if isinstance(node, Node) and node.parent:
+                if isinstance(node, TreeNode) and node.parent:
                     x1, y1 = self.map_to_display(node.parent.x, node.parent.y)
                     x2, y2 = self.map_to_display(node.x, node.y)
                     line = QGraphicsLineItem(QLineF(x1 + SCALE/2, y1 + SCALE/2, x2 + SCALE/2, y2 + SCALE/2))

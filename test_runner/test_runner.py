@@ -3,7 +3,7 @@ import os
 import time
 from core.logger import logger
 from core.map import Map
-from core.node import Node
+from core.node import TreeNode
 import json
 from algorithms.algorithm_manager import AlgorithmManager
 from benchmarks.benchmark_manager import BenchmarkManager

@@ -1,14 +1,14 @@
 import random
 import math
 from core.algorithm import Algorithm
-from core.node import Node
+from core.node import TreeNode
 
 class RandomWalkAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):
         super().__init__(map = map,
                          benchmark_manager = benchmark_manager)        
         if map.start:
-            start_node = Node(map.start.x, map.start.y)
+            start_node = TreeNode(map.start.x, map.start.y)
             self.nodes.append(start_node)
 
     def step(self):
@@ -17,7 +17,7 @@ class RandomWalkAlgorithm(Algorithm):
 
         if self.is_complete():
             if self.map.goal and self.get_nearest_node((self.map.goal.x, self.map.goal.y)) not in self.nodes:
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
+                goal_node = TreeNode(self.map.goal.x, self.map.goal.y)
                 self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()
@@ -34,13 +34,13 @@ class RandomWalkAlgorithm(Algorithm):
         new_y = max(0, min(self.map.height, new_y))
 
         if not self.is_collision(new_x, new_y) and not self.is_edge_collision(last_node.x, last_node.y, new_x, new_y):
-            new_node = Node(new_x, new_y, last_node)
+            new_node = TreeNode(new_x, new_y, last_node)
             last_node.add_child(new_node)
             self.nodes.append(new_node)
             self.steps += 1
 
             if self.is_complete():
-                goal_node = Node(self.map.goal.x, self.map.goal.y)
+                goal_node = TreeNode(self.map.goal.x, self.map.goal.y)
                 self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()

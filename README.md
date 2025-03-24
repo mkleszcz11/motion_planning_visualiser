@@ -153,7 +153,7 @@ Note: For now time measurement in Benchamark might not be reliable, we are not m
 TODO -> Investgate how to measure only the algorithm execution time.
 ---
 
-## Testing and Comparison:
+## Testing and Comparison - algorithms:
  This interface allows to test different algorithms and compare their performance on different maps.
 
  ### How to Run Tests:
@@ -173,4 +173,16 @@ test_runner = TestRunner(
     step_size=5,
     output_file="benchmark_results.csv",
 )
+```
+
+## Testing - unit tests:
+This project includes unit tests for the core components of the project. To run the tests, use the following command:
+
+```bash
+python -m unittest discover
+```
+
+to run without logging:
+```bash
+TEST_MODE=1 python -m unittest discover
 ```

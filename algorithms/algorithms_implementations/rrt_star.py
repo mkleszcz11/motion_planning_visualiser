@@ -1,7 +1,7 @@
 import random
 import math
 from core.algorithm import Algorithm
-from core.node import Node
+from core.node import TreeNode
 
 class RRTStarAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None, enable_rewiring=True, enable_shortcut=True,
@@ -20,7 +20,7 @@ class RRTStarAlgorithm(Algorithm):
 
 
         if map.start:
-            start_node = Node(map.start.x, map.start.y)
+            start_node = TreeNode(map.start.x, map.start.y)
             self.nodes.append(start_node)
 
     def step(self):
@@ -132,12 +132,12 @@ class RRTStarAlgorithm(Algorithm):
     def extend_toward(self, from_node, to_position):
         dist = self.distance(from_node.get_position(), to_position)
         if dist < self.step_size:
-            return Node(to_position[0], to_position[1], from_node)
+            return TreeNode(to_position[0], to_position[1], from_node)
         else:
             theta = math.atan2(to_position[1] - from_node.y, to_position[0] - from_node.x)
             new_x = from_node.x + self.step_size * math.cos(theta)
             new_y = from_node.y + self.step_size * math.sin(theta)
-            return Node(new_x, new_y, from_node)
+            return TreeNode(new_x, new_y, from_node)
 
     def get_near_nodes(self, q_new):
         radius = self.calculate_radius()
@@ -224,7 +224,7 @@ class RRTStarAlgorithm(Algorithm):
     def restart(self):
         self.nodes = []
         if self.map.start:
-            start_node = Node(self.map.start.x, map.start.y)
+            start_node = TreeNode(self.map.start.x, map.start.y)
             self.nodes.append(start_node)
         self.path = []
         self.path_found = False

@@ -1,7 +1,7 @@
 import random
 import math
 from core.algorithm import Algorithm
-from core.node import Node
+from core.node import TreeNode
 from core.map import Map
 from benchmarks.benchmark_manager import BenchmarkManager
 
@@ -11,8 +11,9 @@ class RRTStarV2Algorithm(Algorithm):
                          benchmark_manager = benchmark_manager)
         if map.start:
             # Directly reference Node attributes
-            start_node = Node(map.start.x, map.start.y)
+            start_node = TreeNode(map.start.x, map.start.y)
             self.nodes.append(start_node)
+            self.start_node = start_node
 
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
@@ -41,20 +42,23 @@ class RRTStarV2Algorithm(Algorithm):
                     self.finalize_benchmark()
 
     def get_random_sample(self):
-        return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
+        if self.map.goal and random.random() < 0.2:
+            return (self.map.goal.x, self.map.goal.y)
+        else:
+            return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
 
-    def extend_toward(self, from_node: Node, to_position: tuple):
+    def extend_toward(self, from_node: TreeNode, to_position: tuple):
         dist = self.distance(from_node.get_position(), to_position)
         if dist < self.step_size:
-            return Node(to_position[0], to_position[1], from_node)
+            return TreeNode(to_position[0], to_position[1], from_node)
         else:
             theta = math.atan2(to_position[1] - from_node.y, to_position[0] - from_node.x)
             new_x = from_node.x + self.step_size * math.cos(theta)
             new_y = from_node.y + self.step_size * math.sin(theta)
-            return Node(new_x, new_y, from_node)
+            return TreeNode(new_x, new_y, from_node)
 
-    def rewire_tree(self, new_node: Node):
-        radius = self.step_size * 3 # TODO -> might be calculated in a fancy way
+    def rewire_tree(self, new_node: TreeNode):
+        radius = self.step_size * 6 # TODO -> might be calculated in a fancy way
         nodes_to_rewire = self.get_near_nodes(new_node, radius)
         for node in nodes_to_rewire:
             if not self.is_edge_collision(node.x, node.y, new_node.x, new_node.y):
@@ -62,7 +66,7 @@ class RRTStarV2Algorithm(Algorithm):
                     new_node.parent = node
                     new_node.cost = node.cost + self.distance(node.get_position(), new_node.get_position())
 
-    def get_near_nodes(self, node: Node, radius: float) -> list[Node]:
+    def get_near_nodes(self, node: TreeNode, radius: float) -> list[TreeNode]:
         near_nodes = []
         for potential_node in self.nodes:
             if potential_node == node:

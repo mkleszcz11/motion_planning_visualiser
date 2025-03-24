@@ -4,6 +4,8 @@ map_dense = MapConfig(
     name='Dense Obstacles',
     width=100,
     height=100,
+    default_start=(3, 3),
+    default_goal=(95, 95),
     obstacles=[
         (5, 5, 10, 10),
         (20, 5, 10, 10),

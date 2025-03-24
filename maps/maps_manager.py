@@ -19,11 +19,11 @@ class MapsManager:
             {"name": "Rooms"          , "map": rooms},
             {"name": "Dense Obstacles", "map": map_dense},
             {"name": "Narrow Passage" , "map": narrow_passage},
-            {"name": "Maze Map", "map": maze},
-            {"name": "Cluttered Map", "map": cluttered},
-            {"name": "Open Space", "map": open_space},
-            {"name": "Zig-Zag Map", "map": zig_zag},
-            {"name": "Island Map", "map": island}
+            # {"name": "Maze Map", "map": maze},
+            # {"name": "Cluttered Map", "map": cluttered},
+            # {"name": "Open Space", "map": open_space},
+            # {"name": "Zig-Zag Map", "map": zig_zag},
+            # {"name": "Island Map", "map": island}
         ]
 
     def get_map_names(self):
