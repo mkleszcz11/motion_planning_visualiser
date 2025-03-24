@@ -3,7 +3,7 @@ import math
 from core.algorithm import Algorithm
 from core.node import Node
 
-BIAS = 0.4
+BIAS = 1/5
 
 class RandomWalkBiasedAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):

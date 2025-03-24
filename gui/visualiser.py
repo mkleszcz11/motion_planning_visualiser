@@ -1,7 +1,7 @@
 import sys
 
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QGraphicsScene, QGraphicsView, 
-                             QGraphicsRectItem, QGraphicsEllipseItem, QSpinBox, QLabel, QVBoxLayout, 
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QPushButton, QGraphicsScene, QGraphicsView,
+                             QGraphicsRectItem, QGraphicsEllipseItem, QSpinBox, QLabel, QVBoxLayout,
                              QWidget, QGraphicsLineItem, QComboBox, QDoubleSpinBox)
 from PyQt5.QtCore import Qt, QRectF, QLineF, QTimer
 from PyQt5.QtGui import QPen, QColor
@@ -60,9 +60,9 @@ class Visualiser(QMainWindow):
         self.interval_input.setRange(0.001, 5.0)
         self.interval_input.setSingleStep(0.001)
         self.interval_input.setDecimals(3)
-        self.interval_input.setValue(0.1)
+        self.interval_input.setValue(0.001) #Default step interval
         self.interval_label = QLabel('Interval (s):')
-        
+
         # Step size input
         self.step_size_input = QDoubleSpinBox()
         self.step_size_input.setRange(0.01, 30)
@@ -194,13 +194,13 @@ class Visualiser(QMainWindow):
     def set_goal(self):
         self.goal_mode = True
         self.start_mode = False
-        
+
     def reset_simulation(self):
         self.stop_auto_iterate()
         self.map.reset()
         # self.algorithm = None
         self.draw_map()
-        
+
     def reset_path(self):
         self.stop_auto_iterate()
         if self.algorithm:
@@ -236,7 +236,7 @@ class Visualiser(QMainWindow):
     def start_auto_iterate(self):
         interval = int(self.interval_input.value() * 1000)  # Convert to milliseconds and cast to int
         self.timer.start(interval)
-        
+
     def stop_auto_iterate(self):
         self.timer.stop()
 
@@ -244,7 +244,7 @@ class Visualiser(QMainWindow):
         if self.algorithm is None or self.map.start is None or self.map.goal is None:
             logger.warning("Set both start and goal before running the algorithm!")
             return
-        
+
         logger.info("Executing solution...")
         while not self.algorithm.is_complete():
             self.algorithm.step()
@@ -268,9 +268,9 @@ class Visualiser(QMainWindow):
             )
             step_size = self.step_size_input.value()
             self.algorithm.step_size = step_size
-            
+
         self.draw_map()
-        
+
     def load_map(self):
         self.reset_simulation()
         selected_map = self.map_selector.currentText()

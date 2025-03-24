@@ -7,137 +7,120 @@ from core.node import Node
 class RRTConnectAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):
         super().__init__(map=map, benchmark_manager=benchmark_manager)
-        self.tree_a = []  # Tree rooted at the start
-        self.tree_b = []  # Tree rooted at the goal
 
-        if map.start:
-            start_node = Node(map.start.x, map.start.y)
-            self.tree_a.append(start_node)
-            self.nodes.append(start_node)  # Keep track of all nodes for visualization
-        if map.goal:
-            goal_node = Node(map.goal.x, map.goal.y)
-            self.tree_b.append(goal_node)
-            # self.nodes.append(goal_node) # Do not append goal, it messes with visualizations.
+        # Initialize two trees (start and goal trees)
+        self.tree_start = []  # Start tree
+        self.tree_goal = []  # Goal tree
+
+        # Path reconstruction and tree connection info
+        self.path = []
+        self.joint_start = None  # Node where start tree connects to the goal tree
+        self.joint_goal = None  # Node where goal tree connects to the start tree
+
+        # Ensure the map contains valid start and goal points
+        if not map.start or not map.goal:
+            raise ValueError("Start and goal points are required.")
+
+        # Add start and goal nodes to their respective trees
+        self.tree_start.append(Node(map.start.x, map.start.y))
+        self.tree_goal.append(Node(map.goal.x, map.goal.y))
 
     def step(self):
+        """Perform a single iteration step of the RRT-Connect algorithm."""
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_benchmark()
 
-        # 1. Sample a random configuration
-        q_rand = self.get_random_sample()
+        # Alternate between the start and goal trees for the connection
+        active_tree, passive_tree = (self.tree_start, self.tree_goal)
 
-        # 2. Extend tree_a towards q_rand
-        self.extend_and_connect(self.tree_a, self.tree_b, q_rand)  # No longer check return value here
+        # Sample a random point in the search space
+        random_sample = self.get_random_sample()
 
-        # Check for completion *after* extending and *before* swapping
-        if self.is_complete():
-            self.reconstruct_path()
-            self.finalize_benchmark()
+        # Perform step for the active tree: Extend toward the sampled point
+        nearest_active = self.get_nearest_node_in_tree(random_sample, active_tree)
+        new_node_active = self.extend_toward(nearest_active, random_sample)
 
-        # 3. Swap trees (important for balanced exploration)
-        self.tree_a, self.tree_b = self.tree_b, self.tree_a
-        self.steps += 1 # Increment steps *after* the swap
+        # Check for collisions to add the new node
+        if new_node_active and not self.is_collision(new_node_active.x, new_node_active.y):
+            if not self.is_edge_collision(nearest_active.x, nearest_active.y, new_node_active.x, new_node_active.y):
+                nearest_active.add_child(new_node_active)
+                active_tree.append(new_node_active)
 
-    def extend_and_connect(self, tree_from, tree_to, q_target):
-        """Extends tree_from towards q_target and tries to connect to tree_to.
+                # Try to connect the second (passive) tree
+                nearest_passive = self.get_nearest_node_in_tree((new_node_active.x, new_node_active.y), passive_tree)
+                new_node_passive = self.extend_toward(nearest_passive, (new_node_active.x, new_node_active.y))
 
-        Args:
-            tree_from: The tree to extend.
-            tree_to:   The tree to try to connect to.
-            q_target:  The target configuration (can be q_rand or a node from tree_to).
+                # Iteratively connect the passive tree
+                while new_node_passive and not self.is_collision(new_node_passive.x, new_node_passive.y):
+                    if not self.is_edge_collision(nearest_passive.x, nearest_passive.y, new_node_passive.x,
+                                                  new_node_passive.y):
+                        nearest_passive.add_child(new_node_passive)
+                        passive_tree.append(new_node_passive)
 
-        Returns:
-            True if the trees are connected, False otherwise.  <-- Return value is still useful
-        """
-        q_near = self.get_nearest_node_in_tree(q_target, tree_from)
-        q_new = self.extend_toward(q_near, q_target)
+                        # Check if connection between trees is complete
+                        if self.distance((new_node_active.x, new_node_active.y),
+                                         (new_node_passive.x, new_node_passive.y)) < self.step_size:
+                            self.joint_start = new_node_active
+                            self.joint_goal = new_node_passive
+                            self.reconstruct_path()  # Reconstruct the path
+                            self.finalize_benchmark()  # Finalize benchmark if needed
+                            return
 
-        if q_new is None:  # extend_toward may return None
-            return False
+                    # Otherwise, extend further
+                    nearest_passive = new_node_passive
+                    new_node_passive = self.extend_toward(nearest_passive, (new_node_active.x, new_node_active.y))
 
-        if not self.is_collision(q_new.x, q_new.y) and not self.is_edge_collision(q_near.x, q_near.y, q_new.x, q_new.y):
-            q_near.add_child(q_new)
-            tree_from.append(q_new)
-            self.nodes.append(q_new)  # Add to the overall node list for visualization
-
-            # --- Connect Heuristic (try to connect to tree_to) ---
-            q_connect_near = self.get_nearest_node_in_tree(q_new.get_position(),
-                                                           tree_to)  # find the nearest in the *other* tree
-            q_connect = q_new  # Initialize
-
-            while True:  # Keep connecting
-                q_next = self.extend_toward(q_connect_near,
-                                            q_connect.get_position())  # Extend from tree_to towards q_connect
-
-                if q_next is None:  # Extend may return None
-                    break
-
-                if not self.is_collision(q_next.x, q_next.y) and not self.is_edge_collision(q_connect_near.x,
-                                                                                            q_connect_near.y, q_next.x,
-                                                                                            q_next.y):
-                    q_connect_near.add_child(q_next)
-                    tree_to.append(q_next)
-
-                    if self.distance(q_next.get_position(), q_connect.get_position()) < self.step_size:
-                        # --- Trees Connected! ---
-                        self.reconstruct_path_connect(tree_from, tree_to, q_new, q_next)  # Pass the connecting nodes
-                        #self.finalize_benchmark()  <-- Don't finalize here! Do it in step()
-                        return True  # Connection made
-
-                    q_connect_near = q_next  # Keep extending to connect
-
-                else:  # Collision
-                    break  # Stop extending this branch
-
-        return False  # No connection made
+        # Swap active and passive trees for the next iteration
+        self.tree_start, self.tree_goal = self.tree_goal, self.tree_start
+        self.steps += 1
 
     def get_random_sample(self):
+        """Generate a random sample within the map boundaries."""
         return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
 
     def extend_toward(self, from_node, to_position):
+        """Extend from a node toward a target position, respecting the step size."""
         dist = self.distance(from_node.get_position(), to_position)
         if dist < self.step_size:
-            # If within step_size, we go all the way.
-            return Node(to_position[0], to_position[1], from_node)  # Return the actual node
-        else:
-            theta = math.atan2(to_position[1] - from_node.y, to_position[0] - from_node.x)
-            new_x = from_node.x + self.step_size * math.cos(theta)
-            new_y = from_node.y + self.step_size * math.sin(theta)
-            return Node(new_x, new_y, from_node)  # Return the new node.
+            return Node(to_position[0], to_position[1], from_node)  # Create a new node at the target
 
-    def get_nearest_node_in_tree(self, position, tree):
-        """Finds the nearest node to a given position within a specific tree."""
-        min_dist = float('inf')
+        # Calculate direction and generate a new node along the line
+        theta = math.atan2(to_position[1] - from_node.y, to_position[0] - from_node.x)
+        new_x = from_node.x + self.step_size * math.cos(theta)
+        new_y = from_node.y + self.step_size * math.sin(theta)
+        return Node(new_x, new_y, from_node)
+
+    def get_nearest_node_in_tree(self, target_position, tree):
+        """Find the nearest node to a given position within a tree."""
         nearest_node = None
+        min_distance = float('inf')
         for node in tree:
-            dist = self.distance(node.get_position(), position)
-            if dist < min_dist:
-                min_dist = dist
+            dist = self.distance(node.get_position(), target_position)
+            if dist < min_distance:
                 nearest_node = node
+                min_distance = dist
         return nearest_node
 
-    def reconstruct_path_connect(self, tree_a, tree_b, q_a, q_b):
-        """Reconstructs the path when using RRT-Connect.
-           Needs to handle two separate trees.
-        """
+    def reconstruct_path(self):
+        """Reconstruct the path from the start to the goal by joining the trees."""
+        # Build the path from the start tree
+        node = self.joint_start
+        start_path = []
+        while node:
+            start_path.append(node)
+            node = node.parent
+        start_path = start_path[::-1]  # Reverse to get the correct order
 
-        # Find the nodes in each tree that connect the trees
-        node_a = q_a
-        node_b = q_b
-
-        # Path from start to connection point
-        path_a = []
-        while node_a:
-            path_a.append(node_a)
-            node_a = node_a.parent
-        path_a.reverse()  # Reverse to get start -> connection
-
-        # Path from goal to connection point
-        path_b = []
-        while node_b:
-            path_b.append(node_b)
-            node_b = node_b.parent
-        # Don't reverse path_b, we want goal -> connection
+        # Build the path from the goal tree
+        node = self.joint_goal
+        goal_path = []
+        while node:
+            goal_path.append(node)
+            node = node.parent
 
         # Combine paths
-        self.path = path_a + path_b[::-1]  # Concatenate and make sure path b is in correct order
+        self.path = start_path + goal_path
+
+    def is_complete(self):
+        """Return True if the path has been fully reconstructed."""
+        return len(self.path) > 0

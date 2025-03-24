@@ -8,7 +8,9 @@ from core.node import Node
 from core.map import Map
 from benchmarks.benchmark_manager import BenchmarkManager
 
-class RRTStarV2Algorithm(Algorithm):
+BIAS = 1/5
+
+class RRTStarBiasedV2Algorithm(Algorithm):
     def __init__(self, map: Map, benchmark_manager: BenchmarkManager = None):
         super().__init__(map = map,
                          benchmark_manager = benchmark_manager)
@@ -44,7 +46,11 @@ class RRTStarV2Algorithm(Algorithm):
                     self.finalize_benchmark()
 
     def get_random_sample(self):
-        return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
+        # Introduce goal bias
+        if self.map.goal and random.random() < BIAS:
+            return (self.map.goal.x, self.map.goal.y)
+        else:
+            return (random.uniform(0, self.map.width), random.uniform(0, self.map.height))
 
     def extend_toward(self, from_node: Node, to_position: tuple):
         dist = self.distance(from_node.get_position(), to_position)

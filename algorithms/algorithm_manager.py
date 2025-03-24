@@ -10,10 +10,9 @@ from algorithms.algorithms_implementations.random_walk_biased import RandomWalkB
 from algorithms.algorithms_implementations.rrt import RRTAlgorithm
 from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
-from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
-from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
 from algorithms.algorithms_implementations.prm_star_hybrid import HybridSamplingPRMStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_v2 import RRTStarV2Algorithm
+from algorithms.algorithms_implementations.rrt_star_biased_v2 import RRTStarBiasedV2Algorithm
 
 algorithms = [
     {
@@ -29,28 +28,20 @@ algorithms = [
         "algorithm": RRTAlgorithm
     },
     {
-        "name": "RRT-Connect",
-        "algorithm": RRTConnectAlgorithm
-    },
-    {
-        "name": "RRT*",
-        "algorithm": RRTStarAlgorithm
-    },
-    {
-        "name": "RRT, Biased",
+        "name": "RRT Biased",
         "algorithm": RRTBiasedAlgorithm
-    },
-    {
-        "name": "RRT*, Biased",
-        "algorithm": RRTStarBiasedAlgorithm
     },
     {
         "name": "PRM*, Hybrid",
         "algorithm": HybridSamplingPRMStarAlgorithm
     },
     {
-        "name": "RRT*, V2",
+        "name": "RRT* V2",
         "algorithm": RRTStarV2Algorithm
+    },
+    {
+        "name": "RRT* Biased V2",
+        "algorithm": RRTStarBiasedV2Algorithm
     }
     
 ]
