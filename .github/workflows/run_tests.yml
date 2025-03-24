@@ -1,0 +1,33 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  unittests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m venv env
+          source env/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run all tests
+        run: |
+          source env/bin/activate
+          python -m unittest discover -s tests -p "test_*.py"
