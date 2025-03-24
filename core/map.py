@@ -1,18 +1,29 @@
-from core.node import Node
+from core.node import TreeNode, GraphNode
 
 class Map:
-    def __init__(self, width, height, start=None, goal=None):
+    def __init__(self, width, height, start=None, goal=None, architecture="tree"):
         self.width = float(width)
         self.height = float(height)
         self.start = start
         self.goal = goal
         self.obstacles = []
+        self.architecture = architecture
 
     def set_start(self, x, y):
-        self.start = Node(float(x), float(y))  # Store as Node object
+        if self.architecture == "tree":
+            self.start = TreeNode(float(x), float(y), None)
+        elif self.architecture == "graph":
+            self.start = GraphNode(float(x), float(y))
+        else:
+            raise ValueError("Unknown architecture")
 
     def set_goal(self, x, y):
-        self.goal = Node(float(x), float(y))  # Store as Node object
+        if self.architecture == "tree":
+            self.goal = TreeNode(float(x), float(y), None)
+        elif self.architecture == "graph":
+            self.goal = GraphNode(float(x), float(y))
+        else:
+            raise ValueError("Unknown architecture")
 
     def add_obstacle(self, x, y, width, height):
         self.obstacles.append((float(x), float(y), float(width), float(height)))

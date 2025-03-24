@@ -1,21 +1,22 @@
 class BenchmarkResult:
     def __init__(self,
                  algorithm_name,
-                 path_length,
                  steps,
                  execution_time,
                  start_point,
                  goal_point,
                  step_size,
-                 path):
+                 path_length,
+                 shortest_path):
         self.algorithm_name = algorithm_name
-        self.path_length = path_length
         self.steps = steps
         self.execution_time = execution_time
         self.start_point = start_point
         self.goal_point = goal_point
         self.step_size = step_size
-        self.path = path
+        self.path_length = path_length
+        self.path = shortest_path # List of points
+
 
     def __str__(self):
         # List of nodes:

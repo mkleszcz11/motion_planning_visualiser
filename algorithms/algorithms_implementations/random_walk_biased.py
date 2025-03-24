@@ -1,7 +1,7 @@
 import random
 import math
 from core.algorithm import Algorithm
-from core.node import Node
+from core.node import TreeNode
 
 BIAS = 0.4
 
@@ -10,28 +10,16 @@ class RandomWalkBiasedAlgorithm(Algorithm):
         super().__init__(map = map,
                          benchmark_manager = benchmark_manager)        
         if map.start:
-            start_node = Node(map.start.x, map.start.y)
+            start_node = TreeNode(map.start.x, map.start.y)
             self.nodes.append(start_node)
+            self.start_node = start_node
 
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_benchmark()
 
-        if self.is_complete():
-            if self.map.goal and self.get_nearest_node((self.map.goal.x, self.map.goal.y)) not in self.nodes:
-                nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-                goal_node = Node(self.map.goal.x, self.map.goal.y, parent=nearest_node)  # ✅ Link goal to tree
-                nearest_node.add_child(goal_node)
-                self.nodes.append(goal_node)
-                self.reconstruct_path()
-                self.finalize_benchmark()
-            return
-
-        if not self.nodes:
-            return
-
         last_node = self.nodes[-1]
-        
+
         # Introduce bias, from time to time, move towards the goal
         if random.random() < BIAS and self.map.goal:
             vector = (self.map.goal.x - last_node.x, self.map.goal.y - last_node.y)
@@ -47,15 +35,11 @@ class RandomWalkBiasedAlgorithm(Algorithm):
         new_y = max(0, min(self.map.height, new_y))
 
         if not self.is_collision(new_x, new_y) and not self.is_edge_collision(last_node.x, last_node.y, new_x, new_y):
-            new_node = Node(new_x, new_y, last_node)
+            new_node = TreeNode(new_x, new_y, parent = last_node)
             last_node.add_child(new_node)
             self.nodes.append(new_node)
             self.steps += 1
 
             if self.is_complete():
-                nearest_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-                goal_node = Node(self.map.goal.x, self.map.goal.y, parent=nearest_node)  # ✅ Link goal node
-                nearest_node.add_child(goal_node)
-                self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()

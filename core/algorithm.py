@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import math
 import time
 from core.map import Map
-from core.node import Node
+from core.node import TreeNode, GraphNode
 from benchmarks.benchmark_manager import BenchmarkManager
 from benchmarks.benchmark_result import BenchmarkResult
 from core.logger import logger
@@ -11,13 +11,17 @@ class Algorithm(ABC):
     def __init__(self,
                  map: Map,
                  step_size: float = 2,
-                 benchmark_manager: BenchmarkManager = None):
+                 benchmark_manager: BenchmarkManager = None,
+                 architecture: str = "tree"):
         self.map = map
         self.nodes = []
         self.steps = 0
         self.step_size = step_size
         self.start_time = None
         self.benchmark_manager = benchmark_manager
+        self.architecture = architecture
+        self.shortest_path = [] # store shortest path starting from start node to goal node
+        self.start_node = None
 
     @abstractmethod
     def step(self):
@@ -42,20 +46,33 @@ class Algorithm(ABC):
     def clear_nodes(self):
         # Usually we would like to keep a start node.
         self.nodes = []
+        self.start_node = None
         if self.map.start:
-            start_node = Node(self.map.start.x, self.map.start.y)
-            self.nodes.append(start_node)
+            if self.architecture == "tree":
+                self.start_node = TreeNode(self.map.start.x, self.map.start.y)
+            elif self.architecture == "graph":
+                self.start_node = GraphNode(self.map.start.x, self.map.start.y, None)
+            if self.start_node is None:
+                raise ValueError("Start node is None")
+
+            self.nodes.append(self.start_node)
 
     def get_nodes(self):
         return self.nodes
 
     def is_collision(self, x, y):
         """
-        Check if the point (x, y) is inside an obstacle.
+        Check if the point (x, y) is inside an obstacle. And inside a map.
         """
+        # Check if it is inside the map
+        if x < 0 or x > self.map.width or y < 0 or y > self.map.height:
+            return True
+
+        # Check if it is inside an obstacle
         for ox, oy, w, h in self.map.get_obstacles():
             if ox <= x <= ox + w and oy <= y <= oy + h:
                 return True
+
         return False
 
     def is_edge_collision(self, x1, y1, x2, y2):
@@ -81,15 +98,7 @@ class Algorithm(ABC):
         return (ccw(x1, y1, x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4)) and \
                (ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4))
 
-    def compute_path_length(self):
-        length = 0
-        for i in range(1, len(self.nodes)):
-            x1, y1 = self.nodes[i - 1].get_position()
-            x2, y2 = self.nodes[i].get_position()
-            length += math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-        return length
-
-    def get_nearest_node(self, sample):
+    def get_nearest_node(self, sample) -> TreeNode|GraphNode|None:
         if not self.nodes:
             return None
 
@@ -104,7 +113,6 @@ class Algorithm(ABC):
 
     # TODO -> It might not work for PRM
     def reconstruct_path(self):
-        # TODO -> It might not work for PRM
         logger.info("Reconstructing path...")
         if self.map.goal is None:
             return
@@ -112,7 +120,7 @@ class Algorithm(ABC):
         logger.info("Calculating shortest path...")
         self.shortest_path = []
         node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-        if node is None: # ADDED THIS
+        if node is None:
             return
 
         while node is not None:
@@ -120,10 +128,33 @@ class Algorithm(ABC):
             node = node.parent
         self.shortest_path.reverse()
 
-    def distance(self, pos1, pos2):
+    def distance(self, pos1: tuple, pos2: tuple) -> float:
         if pos1 is None or pos2 is None:
             return float('inf')
         return math.sqrt((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)
+
+    def calculate_shortest_path_cost(self) -> float:
+        """
+        Calculate the cost of a shortest path.
+        """
+        if len(self.shortest_path) == 0:
+            logger.warning("Shortest path is empty!")
+            return float('inf')
+
+        # Validate that the first node has the start node location
+        if self.shortest_path[0] != self.start_node:
+            logger.error("Shortest path does not start from the start node!")
+            return float('inf')
+
+        cost = 0.0
+        for node in self.shortest_path:
+            if node.parent is not None:
+                cost += self.distance(node.get_position(), node.parent.get_position())
+
+        # Add the distance from the last node to the goal
+        cost += self.distance(self.shortest_path[-1].get_position(), (self.map.goal.x, self.map.goal.y))
+
+        return cost
 
     def start_benchmark(self):
         if self.start_time is None and self.benchmark_manager is not None:
@@ -140,17 +171,16 @@ class Algorithm(ABC):
             return
 
         execution_time = time.time() - self.start_time
-        path_length = self.compute_path_length()
 
         result = BenchmarkResult(
             algorithm_name=self.__class__.__name__,
-            path_length=path_length,
             steps=self.steps,
             execution_time=execution_time,
             start_point=self.map.start,
             goal_point=self.map.goal,
             step_size=self.step_size,
-            path=self.shortest_path
+            path_length=self.calculate_shortest_path_cost(),
+            shortest_path=self.shortest_path
         )
 
         self.benchmark_manager.add_result(result)

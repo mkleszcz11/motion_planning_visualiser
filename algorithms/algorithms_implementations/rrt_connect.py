@@ -1,7 +1,7 @@
 import random
 import math
 from core.algorithm import Algorithm
-from core.node import Node
+from core.node import TreeNode
 
 
 class RRTConnectAlgorithm(Algorithm):
@@ -11,11 +11,11 @@ class RRTConnectAlgorithm(Algorithm):
         self.tree_b = []  # Tree rooted at the goal
 
         if map.start:
-            start_node = Node(map.start.x, map.start.y)
+            start_node = TreeNode(map.start.x, map.start.y)
             self.tree_a.append(start_node)
             self.nodes.append(start_node)  # Keep track of all nodes for visualization
         if map.goal:
-            goal_node = Node(map.goal.x, map.goal.y)
+            goal_node = TreeNode(map.goal.x, map.goal.y)
             self.tree_b.append(goal_node)
             # self.nodes.append(goal_node) # Do not append goal, it messes with visualizations.
 
@@ -98,12 +98,12 @@ class RRTConnectAlgorithm(Algorithm):
         dist = self.distance(from_node.get_position(), to_position)
         if dist < self.step_size:
             # If within step_size, we go all the way.
-            return Node(to_position[0], to_position[1], from_node)  # Return the actual node
+            return TreeNode(to_position[0], to_position[1], from_node)  # Return the actual node
         else:
             theta = math.atan2(to_position[1] - from_node.y, to_position[0] - from_node.x)
             new_x = from_node.x + self.step_size * math.cos(theta)
             new_y = from_node.y + self.step_size * math.sin(theta)
-            return Node(new_x, new_y, from_node)  # Return the new node.
+            return TreeNode(new_x, new_y, from_node)  # Return the new node.
 
     def get_nearest_node_in_tree(self, position, tree):
         """Finds the nearest node to a given position within a specific tree."""

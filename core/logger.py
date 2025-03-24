@@ -26,3 +26,9 @@ console_handler.setFormatter(formatter)
 if not logger.hasHandlers():
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+# Disable logs during tests
+if os.getenv("TEST_MODE") == "1":
+    logger.setLevel(logging.ERROR)  # Suppress logs during tests
+    file_handler.setLevel(logging.ERROR)
+    console_handler.setLevel(logging.ERROR)
