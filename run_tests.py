@@ -9,10 +9,7 @@ import os
 if __name__ == "__main__":
     ### CONFIGURE TEST RUNNER ###
     test_runner = TestRunner(
-        # algorithms=['RRT', 'Biased Random Walk'],
-        # maps=['Simple Map', 'Simple Map V2'],
-        # algorithms=['RRT','RRT, Biased','RRT*','RRT*, Biased'],
-        algorithms=["RRT", "RRT*", "RRT*, V2"],
+        algorithms= ["RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased", "Random Walk - Biased"],
         maps=['Cluttered Map', 'Rooms'],
         runs_per_test = 10,
         step_size = 8.0,
@@ -23,7 +20,7 @@ if __name__ == "__main__":
     logger.info("Running tests...")
     test_runner.run_tests()
     logger.info("Running test analysis...")
-    
+
     analyser = TestAnalyser('benchmark_results.csv')
     analyser.generate_comparison_table()
     analyser.generate_heatmaps_v1()
