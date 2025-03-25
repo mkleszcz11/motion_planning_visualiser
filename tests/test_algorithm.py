@@ -90,6 +90,12 @@ class TestAlgorithm(unittest.TestCase):
         ########################################
         self.algorithm.clear_nodes()
         
+        start_node = TreeNode(self.map.start.x, self.map.start.y)
+        goal_node = TreeNode(self.map.goal.x, self.map.goal.y)
+        self.algorithm.nodes.append(start_node)
+        self.algorithm.start_node = start_node
+        self.algorithm.goal_node = goal_node
+        
         # I should not be able to calculate the cost if path is not set.
         self.assertEqual(self.algorithm.calculate_shortest_path_cost(), float('inf'))
 
@@ -99,6 +105,7 @@ class TestAlgorithm(unittest.TestCase):
         node_4 = TreeNode(30, 20, parent=node_2)
         node_5 = TreeNode(20, 20, parent=node_1)
         node_6 = TreeNode(40, 20, parent=node_4)
+        self.algorithm.goal_node.parent = node_6
         self.algorithm.nodes.append(node_1)
         self.algorithm.nodes.append(node_2)
         self.algorithm.nodes.append(node_3)
@@ -106,17 +113,24 @@ class TestAlgorithm(unittest.TestCase):
         self.algorithm.nodes.append(node_5)
         self.algorithm.nodes.append(node_6)
 
-        self.algorithm.map.set_goal(50, 30)
-
         self.algorithm.reconstruct_path()
         path = self.algorithm.shortest_path
 
-        expected_path = [self.algorithm.start_node, node_1, node_2, node_4, node_6]
+        expected_path = [self.algorithm.start_node, node_1, node_2, node_4, node_6, self.algorithm.goal_node]
         self.assertEqual(path, expected_path)
         
         # Calculate the cost of the path
         cost = self.algorithm.calculate_shortest_path_cost()
-        expected_cost = math.sqrt(5**2 + 5**2) + 10 + math.sqrt(10**2 + 10**2) + 10 + math.sqrt(10**2 + 10**2)
+        
+        # I know this is not elegant, but that's the best I can do right now.
+        start_node_1_cost = math.sqrt((node_1.x - start_node.x)**2 + (node_1.y - start_node.y)**2)
+        node_1_node_2_cost = math.sqrt((node_2.x - node_1.x)**2 + (node_2.y - node_1.y)**2)
+        node_2_node_4_cost = math.sqrt((node_4.x - node_2.x)**2 + (node_4.y - node_2.y)**2)
+        node_4_node_6_cost = math.sqrt((node_6.x - node_4.x)**2 + (node_6.y - node_4.y)**2)
+        node_6_goal_node_cost = math.sqrt((self.algorithm.goal_node.x - node_6.x)**2 + (self.algorithm.goal_node.y - node_6.y)**2)
+
+        expected_cost = start_node_1_cost + node_1_node_2_cost + node_2_node_4_cost + node_4_node_6_cost + node_6_goal_node_cost
+
         self.assertAlmostEqual(cost, expected_cost, places=4)
 
     def test_benchmarking(self):

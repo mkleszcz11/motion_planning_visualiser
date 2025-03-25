@@ -7,26 +7,36 @@ from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
-from algorithms.algorithms_implementations.rrt_star_v2 import RRTStarV2Algorithm
 
 algorithms = [
     {
-        "name": "Random Walk",
-        "algorithm": RandomWalkAlgorithm
-    },
-    {
-        "name": "Random Walk, Biased",
-        "algorithm": RandomWalkBiasedAlgorithm
+        "name": "RRT-Connect",
+        "algorithm": RRTConnectAlgorithm
     },
     {
         "name": "RRT",
         "algorithm": RRTAlgorithm
     },
     {
-        "name": "RRT*, V2",
-        "algorithm": RRTStarV2Algorithm
-    }
-    
+        "name": "RRT - Biased",
+        "algorithm": RRTBiasedAlgorithm
+    },
+    {
+        "name": "RRT*",
+        "algorithm": RRTStarAlgorithm
+    },
+    {
+        "name": "RRT* - Biased",
+        "algorithm": RRTStarBiasedAlgorithm
+    },
+    {
+        "name": "Random Walk",
+        "algorithm": RandomWalkAlgorithm
+    },
+    {
+        "name": "Random Walk - Biased",
+        "algorithm": RandomWalkBiasedAlgorithm
+    },
 ]
 
 class AlgorithmManager:

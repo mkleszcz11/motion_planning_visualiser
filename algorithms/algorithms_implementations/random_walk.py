@@ -9,7 +9,10 @@ class RandomWalkAlgorithm(Algorithm):
                          benchmark_manager = benchmark_manager)        
         if map.start:
             start_node = TreeNode(map.start.x, map.start.y)
+            goal_node = TreeNode(map.goal.x, map.goal.y)
             self.nodes.append(start_node)
+            self.start_node = start_node
+            self.goal_node = goal_node
 
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
@@ -41,6 +44,5 @@ class RandomWalkAlgorithm(Algorithm):
 
             if self.is_complete():
                 goal_node = TreeNode(self.map.goal.x, self.map.goal.y)
-                self.nodes.append(goal_node)
                 self.reconstruct_path()
                 self.finalize_benchmark()

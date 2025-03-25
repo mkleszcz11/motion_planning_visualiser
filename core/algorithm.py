@@ -22,26 +22,46 @@ class Algorithm(ABC):
         self.architecture = architecture
         self.shortest_path = [] # store shortest path starting from start node to goal node
         self.start_node = None
+        self.goal_node = None
 
     @abstractmethod
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_benchmark()
 
-    def is_complete(self):
+    def is_complete(self, new_node=None):
         """
         Algorithm is complete if the nearest node is within self.step_size
         distance of the goal.
+        
+        Args:
+            new_node (TreeNode|GraphNode): The new node to check if it is within distance of the goal.
+                                           If None, it will check for the last node in the nodes list.
+
+        Returns:
+            bool: True if the algorithm is complete, False otherwise.
         """
         if self.map.goal is None:
             return False
 
-        last_node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
+        last_node = self.nodes[-1] if new_node is None else new_node
         if last_node is None:
             return False
 
         distance = self.distance(last_node.get_position(), (self.map.goal.x, self.map.goal.y))
-        return distance < self.step_size
+        
+        is_within_distance = distance < self.step_size
+        goal_achievable = not self.is_edge_collision(last_node.x, last_node.y, self.map.goal.x, self.map.goal.y)
+        goal_node_already_in_nodes = self.goal_node in self.nodes
+        # Algorithm is complete, append the goal node to the nodes list
+        if is_within_distance and goal_achievable and not goal_node_already_in_nodes:
+            self.nodes.append(self.goal_node)
+            self.goal_node.parent = last_node
+            return True
+        elif goal_node_already_in_nodes:
+            return True
+
+        return False
 
     def clear_nodes(self):
         # Usually we would like to keep a start node.
@@ -78,6 +98,9 @@ class Algorithm(ABC):
     def is_edge_collision(self, x1, y1, x2, y2):
         """
         Check if the line segment (x1, y1) to (x2, y2) intersects with any obstacle.
+        
+        Returns:
+            bool: True if there is a collision, False otherwise
         """
         for ox, oy, w, h in self.map.get_obstacles():
             edges = [
@@ -115,13 +138,17 @@ class Algorithm(ABC):
     def reconstruct_path(self):
         logger.info("Reconstructing path...")
         if self.map.goal is None:
+            logger.warning("Goal is not set!")
+            return
+        
+        if self.goal_node is None or self.start_node is None:
+            logger.warning("Goal or start node is not set!")
             return
 
         logger.info("Calculating shortest path...")
         self.shortest_path = []
-        node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-        if node is None:
-            return
+
+        node = self.goal_node
 
         while node is not None:
             self.shortest_path.append(node)
@@ -141,18 +168,24 @@ class Algorithm(ABC):
             logger.warning("Shortest path is empty!")
             return float('inf')
 
-        # Validate that the first node has the start node location
+        # Validate that the first node is the start node
         if self.shortest_path[0] != self.start_node:
+            print(f"Start node: {self.start_node.get_position()}")
+            print(f"First node: {self.shortest_path[0].get_position()}")
             logger.error("Shortest path does not start from the start node!")
+            return float('inf')
+        
+        # Validate that the last node is the goal node
+        if self.shortest_path[-1] != self.goal_node:
+            print(f"Goal node: {self.goal_node.get_position()}")
+            print(f"Last node: {self.shortest_path[-1].get_position()}")
+            logger.error("Shortest path does not end with the goal node!")
             return float('inf')
 
         cost = 0.0
         for node in self.shortest_path:
             if node.parent is not None:
                 cost += self.distance(node.get_position(), node.parent.get_position())
-
-        # Add the distance from the last node to the goal
-        cost += self.distance(self.shortest_path[-1].get_position(), (self.map.goal.x, self.map.goal.y))
 
         return cost
 

@@ -3,7 +3,7 @@ import math
 from core.algorithm import Algorithm
 from core.node import TreeNode
 
-BIAS = 0.4
+BIAS = 1/5
 
 class RandomWalkBiasedAlgorithm(Algorithm):
     def __init__(self, map, benchmark_manager=None):
@@ -11,8 +11,10 @@ class RandomWalkBiasedAlgorithm(Algorithm):
                          benchmark_manager = benchmark_manager)        
         if map.start:
             start_node = TreeNode(map.start.x, map.start.y)
+            goal_node = TreeNode(map.goal.x, map.goal.y)
             self.nodes.append(start_node)
             self.start_node = start_node
+            self.goal_node = goal_node
 
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:

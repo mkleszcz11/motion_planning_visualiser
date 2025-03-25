@@ -57,10 +57,11 @@ class TestAlgorithmSolution(unittest.TestCase):
         self.assertLessEqual(result.execution_time, timeout, f"{algorithm_name} exceeded timeout on '{map_name}'")
         self.assertGreater(result.path_length, 0, f"{algorithm_name} produced a path with zero length on '{map_name}'")
 
-        # Last node should be step_size close to goal
-        distance_to_goal = algorithm.distance(result.path[-1].get_position(), map_instance.goal.get_position())
-        self.assertLessEqual(distance_to_goal, step_size,
-                             f"Last node of {algorithm_name} path is not close to goal on '{map_name}'")
+        # First node should be at the start node location
+        self.assertEqual(result.path[0].get_position(), (map_instance.start.x, map_instance.start.y))
+        
+        # Last node should be at the goal node location
+        self.assertEqual(result.path[-1].get_position(), (map_instance.goal.x, map_instance.goal.y))
 
     def test_all_algorithms(self):
         """Test all algorithms on all maps. Define some custom rules for specific cases."""

@@ -10,8 +10,10 @@ class RRTAlgorithm(Algorithm):
         if map.start:
             # Directly reference TreeNode attributes
             start_node = TreeNode(map.start.x, map.start.y)
+            goal_node = TreeNode(map.goal.x, map.goal.y)
             self.nodes.append(start_node)
             self.start_node = start_node
+            self.goal_node = goal_node
 
     def step(self):
         if self.start_time is None and self.benchmark_manager is not None:
