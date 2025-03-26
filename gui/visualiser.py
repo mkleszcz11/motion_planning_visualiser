@@ -45,7 +45,7 @@ class Visualiser(QMainWindow):
         self.goal_button = QPushButton('Set Goal')
         #self.reset_button = QPushButton('Reset')
         self.reset_path_button = QPushButton('Reset Path')
-        self.iterate_button = QPushButton('Iterate')
+        self.iterate_button = QPushButton('Iterate | (generate and) solve graph')
         self.auto_iterate_button = QPushButton('Auto Iterate')
         self.stop_auto_iterate_button = QPushButton('Stop Auto Iterate')
         self.execute_till_solution_button = QPushButton('Execute Till Solution')
@@ -160,6 +160,16 @@ class Visualiser(QMainWindow):
             goal.setBrush(Qt.red)
             self.scene.addItem(goal)
 
+        if self.algorithm is not None and self.algorithm.architecture == "tree":
+            self.draw_tree()
+        elif self.algorithm is not None and self.algorithm.architecture == "graph":
+            self.draw_graph()
+        else:
+            logger.warning("Algorithm architecture not defined!")
+
+        self.update()
+
+    def draw_tree(self):
         if self.algorithm:
             if hasattr(self.algorithm, "tree_start") and hasattr(self.algorithm, "tree_goal"):
                 # Draw active tree in blue
@@ -199,7 +209,41 @@ class Visualiser(QMainWindow):
                         line.setPen(QPen(QColor("green"), 3))
                         self.scene.addItem(line)
 
-        self.update()
+    def draw_graph(self):
+        """Draws PRM roadmap nodes, edges, and shortest path."""
+        if not self.algorithm:
+            return
+
+        pen_edge = QPen(QColor("blue"), 1)
+        pen_path = QPen(QColor("green"), 3)
+        radius = 2
+
+        # Draw graph edges
+        for node in self.algorithm.get_nodes():
+            x1, y1 = self.map_to_display(node.x, node.y)
+            for neighbour in node.edges:
+                x2, y2 = self.map_to_display(neighbour.x, neighbour.y)
+                line = QGraphicsLineItem(QLineF(x1, y1, x2, y2))
+                line.setPen(pen_edge)
+                self.scene.addItem(line)
+
+        # Draw graph nodes
+        for node in self.algorithm.get_nodes():
+            x, y = self.map_to_display(node.x, node.y)
+            ellipse = QGraphicsEllipseItem(x - radius, y - radius, radius * 2, radius * 2)
+            ellipse.setBrush(QColor("lightblue"))
+            self.scene.addItem(ellipse)
+
+        # Draw the shortest path (if complete)
+        if self.algorithm.is_complete() and self.algorithm.shortest_path:
+            for i in range(1, len(self.algorithm.shortest_path)):
+                n1 = self.algorithm.shortest_path[i - 1]
+                n2 = self.algorithm.shortest_path[i]
+                x1, y1 = self.map_to_display(n1.x, n1.y)
+                x2, y2 = self.map_to_display(n2.x, n2.y)
+                line = QGraphicsLineItem(QLineF(x1, y1, x2, y2))
+                line.setPen(pen_path)
+                self.scene.addItem(line)
 
     def update_step_size(self):
         if self.algorithm:
@@ -313,13 +357,19 @@ class Visualiser(QMainWindow):
             self.map.set_start(x, y)
             self.start_mode = False
             # Re-initialise algorithm when start is defined
-            self.initialise_algorithm()
+            if self.algorithm and self.algorithm.architecture == "tree":
+                self.initialise_algorithm()
+            elif self.algorithm and self.algorithm.architecture == "graph":
+                self.algorithm.reinintialise_start_and_goal(start = self.map.start, goal = self.map.goal)
 
         elif self.goal_mode:
             self.map.set_goal(x, y)
             self.goal_mode = False
             # Re-initialise algorithm when goal is defined
-            self.initialise_algorithm()
+            if self.algorithm and self.algorithm.architecture == "tree":
+                self.initialise_algorithm()
+            elif self.algorithm and self.algorithm.architecture == "graph":
+                self.algorithm.reinintialise_start_and_goal(start = self.map.start, goal = self.map.goal)
 
         self.draw_map()
 

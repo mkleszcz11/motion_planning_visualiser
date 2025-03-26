@@ -7,8 +7,13 @@ from algorithms.algorithms_implementations.rrt_biased import RRTBiasedAlgorithm
 from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorithm
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
+from algorithms.algorithms_implementations.prm import PRMAlgorithm
 
 algorithms = [
+    {
+        "name": "PRM",
+        "algorithm": PRMAlgorithm
+    },
     {
         "name": "RRT-Connect",
         "algorithm": RRTConnectAlgorithm

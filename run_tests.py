@@ -9,11 +9,13 @@ import os
 if __name__ == "__main__":
     ### CONFIGURE TEST RUNNER ###
     test_runner = TestRunner(
-        algorithms= ["RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased", "Random Walk - Biased"],
-        maps=['Cluttered Map', 'Rooms'],
-        runs_per_test = 10,
-        step_size = 8.0,
-        output_file="benchmark_results.csv"
+        algorithms= ["PRM", "RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased"],
+        maps=["Simple Map", "Maze Map"],
+        runs_per_test = 50,
+        step_size = 5.0,
+        output_file="benchmark_results.csv",
+        num_samples_excluding_grid=500,
+        radius_as_step_size_multiplication=3
     )
 
     ### RUN TESTS AND ANALYSIS ###
