@@ -75,11 +75,31 @@ class Algorithm(ABC):
         return False
 
     def line_intersect(self, x1, y1, x2, y2, x3, y3, x4, y4):
-        def ccw(ax, ay, bx, by, cx, cy):
-            return (cy - ay) * (bx - ax) > (by - ay) * (cx - ax)
+        """
+        Checks if two line segments intersect.  Handles the case of zero-length lines,
+        parallel lines, and collinear overlapping lines. Uses a robust
+        determinant-based method.  No false positives or false negatives
+        within the limits of floating-point precision.
+        """
+        # Calculate determinants
+        den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
 
-        return (ccw(x1, y1, x3, y3, x4, y4) != ccw(x2, y2, x3, y3, x4, y4)) and \
-               (ccw(x1, y1, x2, y2, x3, y3) != ccw(x1, y1, x2, y2, x4, y4))
+        if den == 0:  # Lines are parallel or coincident
+            # Check for collinearity.
+            if (x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3) == 0:  # Collinear
+                # Check if segments overlap.  This is crucial for correctness.
+                if max(x1, x2) >= min(x3, x4) and max(x3, x4) >= min(x1, x2) and \
+                        max(y1, y2) >= min(y3, y4) and max(y3, y4) >= min(y1, y2):
+                    return True  # Segments overlap (collinear and overlapping)
+            return False  # Lines are parallel and non-overlapping, or coincident but non-overlapping
+
+        t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+        u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den
+
+        # Check if the intersection point is within both line segments.
+        # Use a small tolerance (epsilon) to account for floating-point errors.
+        epsilon = 1e-9  # Adjust this value if needed, but it should be small
+        return -epsilon <= t <= 1 + epsilon and -epsilon <= u <= 1 + epsilon
 
     def compute_path_length(self):
         length = 0

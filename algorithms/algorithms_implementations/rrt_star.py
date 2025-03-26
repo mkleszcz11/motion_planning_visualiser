@@ -4,18 +4,10 @@ from core.algorithm import Algorithm
 from core.node import Node
 
 class RRTStarAlgorithm(Algorithm):
-    def __init__(self, map, benchmark_manager=None, enable_rewiring=True, enable_shortcut=True,
-                 enable_restarting=False, restart_threshold=0.01, max_restarts = 100):
+    def __init__(self, map, benchmark_manager=None, enable_rewiring=True, enable_shortcut=True):
         super().__init__(map=map, benchmark_manager=benchmark_manager)
         self.enable_rewiring = enable_rewiring
         self.enable_shortcut = enable_shortcut
-        self.enable_restarting = enable_restarting
-        self.best_path_cost = float('inf')
-        self.path_found = False
-        self.iterations_since_improvement = 0
-        self.restart_threshold = restart_threshold
-        self.restart_count = 0
-        self.max_restarts = max_restarts
         self.path = []  # Path for shortcutting
 
 
@@ -89,41 +81,12 @@ class RRTStarAlgorithm(Algorithm):
             self.steps += 1
             print(f"    Steps incremented: {self.steps}")
 
-            if self.is_complete():  # <--- Correct Placement
-                print("    Entering is_complete() block")
-                self.reconstruct_path()  # <--- reconstruct path *only* if complete
-                if self.enable_shortcut:
-                    print("      Entering shortcut_path()")
-                    self.shortcut_path()
-                    print("      Exiting shortcut_path()")
-
-                current_cost = self.compute_path_length()
-                print(f"      Current cost: {current_cost}")
-                if not self.path_found or current_cost < self.best_path_cost:
-                    print("      New best path found!")
-                    self.best_path_cost = current_cost
-                    self.path_found = True
-                    self.iterations_since_improvement = 0
-                else:
-                     print("      No improvement")
-
-                if self.enable_restarting:
-                    if current_cost >= self.best_path_cost * (1 + self.restart_threshold):
-                         self.iterations_since_improvement += 1
-                    else:
-                        self.iterations_since_improvement = 0
-
-                    if self.iterations_since_improvement > 100 and self.restart_count < self.max_restarts:
-                        print("        Restarting...")
-                        self.restart()
-                print("  Before finalize_benchmark()") # Moved print
-                self.finalize_benchmark() # Called *only* if complete!
+            if self.is_complete():
+                self.reconstruct_path()
+                self.finalize_benchmark()
             else:
                 print("Not complete")
 
-        # REMOVED ELSE statement
-
-        # self.finalize_benchmark()  <--- REMOVE THIS LINE.  It's in the wrong place!
         print("==== Exiting step() ====")
 
     def get_random_sample(self):
@@ -186,64 +149,3 @@ class RRTStarAlgorithm(Algorithm):
                         q_near.parent.remove_child(q_near)
                     q_near.parent = q_new
                     q_new.add_child(q_near)  # Correctly add child
-
-
-    def shortcut_path(self):
-        if self.path is None or len(self.path) < 3:
-            return
-
-        i = 0
-        while i < len(self.path) - 2:
-            j = i + 2
-            while j < len(self.path):
-                if not self.is_edge_collision(self.path[i].x, self.path[i].y, self.path[j].x, self.path[j].y):
-                    new_parent = self.path[i]
-                    child_to_reconnect = self.path[j]
-
-                    for k in range(i + 1, j):
-                        if self.path[k].parent:
-                            self.path[k].parent.remove_child(self.path[k])
-
-                    new_parent.add_child(child_to_reconnect)
-                    child_to_reconnect.parent = new_parent
-
-                    temp_path = []
-                    current = child_to_reconnect
-                    while current != new_parent:
-                        temp_path.append(current)
-                        current = current.parent
-                    temp_path.append(new_parent)
-                    temp_path.reverse()
-
-                    self.path = self.path[:i+1] + temp_path + self.path[j+1:]
-                    j = i + 2
-                else:
-                    j += 1
-            i += 1
-
-    def restart(self):
-        self.nodes = []
-        if self.map.start:
-            start_node = Node(self.map.start.x, map.start.y)
-            self.nodes.append(start_node)
-        self.path = []
-        self.path_found = False
-        self.iterations_since_improvement = 0
-        self.restart_count += 1
-
-    # def reconstruct_path(self):
-    #     logger.info("Reconstructing path...")
-    #     if self.map.goal is None:
-    #         return
-    #
-    #     logger.info("Calculating shortest path...")
-    #     self.shortest_path = []
-    #     node = self.get_nearest_node((self.map.goal.x, self.map.goal.y))
-    #     if node is None:  # CRITICAL: Handle the case where no path is found
-    #         logger.warning("No path found to goal.")
-    #         return
-    #
-    #     while node is not None:
-    #         self.shortest_path.append(node)
-    #         node = node.parent
-    #     self.shortest_path.reverse()
