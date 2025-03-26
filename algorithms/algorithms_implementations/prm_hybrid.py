@@ -41,7 +41,7 @@ class HybridPRMAlgorithm(Algorithm):
 
     def step(self):
         """Executes the full PRM algorithm in one step:
-        - Sample valid points
+        - Sample valid points + Gaussian sampling
         - Build roadmap
         - Add start/goal
         - Run A* to find a path
@@ -77,8 +77,9 @@ class HybridPRMAlgorithm(Algorithm):
     def generate_points_on_the_map(self):
         """Generate random valid samples on the map using Gaussian sampling."""
         attempts = 0
-        gaussian_ratio = 0.2  # Adjust the ratio of Gaussian samples
+        gaussian_ratio = 0.75  # Adjust the ratio of Gaussian samples
         num_gaussian_samples = int(self.num_samples * gaussian_ratio)
+        spread = 2 # Std deviation of Gaussian
 
         while len(self.samples) - self.nodes_in_the_grid < self.num_samples and attempts < self.num_samples * 5:
             if attempts < num_gaussian_samples:
@@ -87,7 +88,7 @@ class HybridPRMAlgorithm(Algorithm):
                 c1_y = random.uniform(0, self.map.height)
 
                 # Step 3: Sample distance from a normal distribution
-                std_dev = min(self.map.width, self.map.height) / 10  # Adjust spread
+                std_dev = spread  # Adjust spread
                 d = abs(np.random.normal(0, std_dev))
 
                 # Step 4: Generate c2 at distance d from c1 in a random direction
@@ -101,22 +102,27 @@ class HybridPRMAlgorithm(Algorithm):
 
                 if c1_valid and not c2_valid:
                     self.samples.append(GraphNode(c1_x, c1_y))
+                    attempts += 1
+                    pass
+
                 elif c2_valid and not c1_valid:
                     self.samples.append(GraphNode(c2_x, c2_y))
-                elif c1_valid and c2_valid:
-                    self.samples.append(GraphNode(c1_x, c1_y))
-                    self.samples.append(GraphNode(c2_x, c2_y))
+                    attempts += 1
+                    pass
 
-                attempts += 1
+                else:
+                    pass
+
+
+
             else:
                 # Uniform sampling
                 x = random.uniform(0, self.map.width)
                 y = random.uniform(0, self.map.height)
 
-            if not self.is_collision(x, y):
-                self.samples.append(GraphNode(x, y))
-
-            attempts += 1
+                if not self.is_collision(x, y):
+                    self.samples.append(GraphNode(x, y))
+                    attempts += 1
             
     def generate_default_grid(self):
         """Generate a rectangular grid with spacing equal to neighbour_radius."""

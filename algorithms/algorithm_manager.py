@@ -8,8 +8,7 @@ from algorithms.algorithms_implementations.rrt_connect import RRTConnectAlgorith
 from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
 from algorithms.algorithms_implementations.prm import PRMAlgorithm
-from algorithms.algorithms_implementations.prm-hybrid import HybridPRMAlgorithm
-
+from algorithms.algorithms_implementations.prm_hybrid import HybridPRMAlgorithm
 
 algorithms = [
     {
@@ -17,8 +16,8 @@ algorithms = [
         "algorithm": PRMAlgorithm
     },
     {
-        "name": "PRM",
-        "algorithm": PRMAlgorithm
+        "name": "PRM-Hybrid",
+        "algorithm": HybridPRMAlgorithm
     },
     {
         "name": "RRT-Connect",
