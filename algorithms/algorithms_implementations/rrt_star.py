@@ -10,8 +10,7 @@ from benchmarks.benchmark_manager import BenchmarkManager
 
 class RRTStarAlgorithm(Algorithm):
     def __init__(self, map: Map, benchmark_manager: BenchmarkManager = None):
-        super().__init__(map = map,
-                         benchmark_manager = benchmark_manager)
+        super().__init__(map = map,benchmark_manager = benchmark_manager)
         if map.start:
             # Directly reference Node attributes
             start_node = TreeNode(map.start.x, map.start.y)
@@ -20,7 +19,7 @@ class RRTStarAlgorithm(Algorithm):
             self.start_node = start_node
             self.goal_node = goal_node
 
-    def step(self):
+    def step(self, rewire_setting=True):
         if self.start_time is None and self.benchmark_manager is not None:
             self.start_benchmark()
 
@@ -39,8 +38,9 @@ class RRTStarAlgorithm(Algorithm):
                 nearest_node.add_child(new_node)
                 self.nodes.append(new_node)
                 self.steps += 1
-                
-                self.rewire_tree(new_node)
+
+                if rewire_setting:
+                    self.rewire_tree(new_node)
 
                 if self.is_complete():
                     self.reconstruct_path()
