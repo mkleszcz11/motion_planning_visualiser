@@ -4,18 +4,22 @@ maze = MapConfig(
     name='Maze Map',
     width=100,
     height=100,
-    default_start=(5, 5),
-    default_goal=(95, 95),
+    default_start=(30, 50),
+    default_goal=(70, 50),
     obstacles=[
-        (10, 0, 5, 40),
-        (20, 60, 5, 40),
-        (30, 0, 5, 40),
-        (40, 60, 5, 40),
-        (50, 0, 5, 40),
-        (60, 60, 5, 40),
-        (70, 0, 5, 40),
-        (80, 60, 5, 40),
-        (90, 0, 5, 40)
+        # Enclosure around start, open only to the left
+        (10, 40, 30, 1),
+        (10, 59, 30, 1),
+        (40, 40, 1, 20),
+        
+        # Enclosure around goal, open only to the right
+        (60, 40, 30, 1),
+        (60, 59, 30, 1),
+        (60, 40, 1, 20),
+        
+        # Add two obstacles in the middle
+        (49, 10, 1, 30),
+        (51, 60, 1, 30)
     ]
 )
 

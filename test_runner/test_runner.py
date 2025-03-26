@@ -10,7 +10,7 @@ from benchmarks.benchmark_manager import BenchmarkManager
 
 
 class TestRunner:
-    def __init__(self, algorithms, maps, runs_per_test, output_file, step_size=5):
+    def __init__(self, algorithms, maps, runs_per_test, output_file, step_size=5, num_samples_excluding_grid=100, radius_as_step_size_multiplication=2):
         self.algorithms = algorithms
         self.maps = maps
         self.runs_per_test = runs_per_test
@@ -18,6 +18,10 @@ class TestRunner:
         self.step_size = step_size
         self.algorithm_manager = AlgorithmManager()
         self.benchmark_manager = BenchmarkManager()
+
+        # Parameters for PRM
+        self.num_samples_excluding_grid = num_samples_excluding_grid
+        self.radius_as_step_size_multiplication = radius_as_step_size_multiplication
 
         # Ensure results directory exists
         os.makedirs(os.path.dirname(self.output_file), exist_ok=True)
@@ -79,6 +83,12 @@ class TestRunner:
             self.benchmark_manager
         )
         algorithm.step_size = self.step_size
+        
+        if hasattr(algorithm, 'num_samples'):
+            algorithm.num_samples = self.num_samples_excluding_grid
+        if hasattr(algorithm, 'neighbour_radius'):
+            algorithm.neighbour_radius = self.step_size * self.radius_as_step_size_multiplication
+
         if algorithm is None:
             logger.error(f"Algorithm '{algorithm_name}' not found.")
             return None

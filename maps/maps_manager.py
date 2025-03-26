@@ -14,13 +14,13 @@ from maps.maps.dense_map import map_dense
 class MapsManager:
     def __init__(self):
         self.maps = [
+            {"name": "Maze Map", "map": maze},
             {"name": "Simple Map V1"  , "map": simple_map},
             {"name": "Simple Map V2"  , "map": simple_map_2},
             {"name": "Rooms"          , "map": rooms},
             {"name": "Dense Obstacles", "map": map_dense},
             {"name": "Narrow Passage" , "map": narrow_passage},
-            # {"name": "Maze Map", "map": maze},
-            # {"name": "Cluttered Map", "map": cluttered},
+            {"name": "Cluttered Map", "map": cluttered}
             # {"name": "Open Space", "map": open_space},
             # {"name": "Zig-Zag Map", "map": zig_zag},
             # {"name": "Island Map", "map": island}

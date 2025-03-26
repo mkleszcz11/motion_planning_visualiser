@@ -34,6 +34,9 @@ class Algorithm(ABC):
         Algorithm is complete if the nearest node is within self.step_size
         distance of the goal.
         
+        This is true for the tree architecture. Graph architecture should
+        override this method and check if the goal node is in the nodes list.
+        
         Args:
             new_node (TreeNode|GraphNode): The new node to check if it is within distance of the goal.
                                            If None, it will check for the last node in the nodes list.
@@ -71,7 +74,7 @@ class Algorithm(ABC):
             if self.architecture == "tree":
                 self.start_node = TreeNode(self.map.start.x, self.map.start.y)
             elif self.architecture == "graph":
-                self.start_node = GraphNode(self.map.start.x, self.map.start.y, None)
+                self.start_node = GraphNode(self.map.start.x, self.map.start.y)
             if self.start_node is None:
                 raise ValueError("Start node is None")
 
@@ -134,8 +137,16 @@ class Algorithm(ABC):
                 min_dist = dist
         return nearest
 
-    # TODO -> It might not work for PRM
-    def reconstruct_path(self):
+    def reconstruct_path(self) -> None:
+        """
+        Reconstruct the shortest path from the start node to the goal node.
+        
+        Should be called after the algorithm is complete (start and goal
+        nodes are set and are connected with parent-child "chain" relationship).
+        
+        It works for tree architecture. Graph architecture should override
+        this method and call something like Dijkstra or A* algorithm inside.
+        """
         logger.info("Reconstructing path...")
         if self.map.goal is None:
             logger.warning("Goal is not set!")
