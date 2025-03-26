@@ -113,8 +113,6 @@ class HybridPRMAlgorithm(Algorithm):
                 else:
                     pass
 
-
-
             else:
                 # Uniform sampling
                 x = random.uniform(0, self.map.width)

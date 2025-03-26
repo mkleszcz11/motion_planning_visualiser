@@ -9,7 +9,7 @@ import os
 if __name__ == "__main__":
     ### CONFIGURE TEST RUNNER ###
     test_runner = TestRunner(
-        algorithms= ["PRM", "RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased"],
+        algorithms= ["PRM","PRM-Hybrid", "RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased"],
         maps=["Simple Map", "Maze Map"],
         runs_per_test = 50,
         step_size = 5.0,
