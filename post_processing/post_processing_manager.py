@@ -11,6 +11,8 @@ from post_processing.algorithms.hybrid_bspline import HybridBSplineSmoothing
 from post_processing.algorithms.path_shortening import PathShortening
 # --- IMPORT THE NEW ALGORITHM ---
 from post_processing.algorithms.bspline_smoothing import BSplineSmoothing
+from post_processing.algorithms.recursive_critical_bspline import RecursiveCriticalBSpline
+
 # ---------------------------------
 
 # Define the list of available algorithms
@@ -19,7 +21,6 @@ available_algorithms = [
         "name": "Path Shortening (Random)",
         "algorithm": PathShortening
     },
-    # --- ADD THE NEW ALGORITHM ---
     {
         "name": "B-Spline Smoothing (Quintic)", # Name for the dropdown
         "algorithm": BSplineSmoothing
@@ -29,8 +30,12 @@ available_algorithms = [
         "algorithm": HybridBSplineSmoothing  # Use the renamed class
     },
     {
-        "name": "Critical Point B-Spline",  # Name for the dropdown
+        "name": "Critical-Path B-Spline",  # Name for the dropdown
         "algorithm": CriticalPointBSpline  # Use the new class
+    },
+    {
+        "name": "Recursive Critical-Path B-Spline (Depth 3)",  # Descriptive name
+        "algorithm": RecursiveCriticalBSpline
     },
     # ----------------------------
 ]
