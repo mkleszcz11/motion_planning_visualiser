@@ -9,6 +9,7 @@ from algorithms.algorithms_implementations.rrt_star import RRTStarAlgorithm
 from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedAlgorithm
 from algorithms.algorithms_implementations.prm import PRMAlgorithm
 from algorithms.algorithms_implementations.prm_hybrid import HybridPRMAlgorithm
+from algorithms.algorithms_implementations.rrt_star_beta import RRTStarBetaAlgorithm
 
 algorithms = [
     {
@@ -38,6 +39,10 @@ algorithms = [
     {
         "name": "RRT* - Biased",
         "algorithm": RRTStarBiasedAlgorithm
+    },
+    {
+        "name": "RRT* - Beta",
+        "algorithm": RRTStarBetaAlgorithm
     },
     {
         "name": "Random Walk",

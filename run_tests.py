@@ -9,9 +9,9 @@ import os
 if __name__ == "__main__":
     ### CONFIGURE TEST RUNNER ###
     test_runner = TestRunner(
-        algorithms= ["PRM","PRM-Hybrid", "RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased"],
-        maps=["Dense Obstacles"],
-        runs_per_test = 100,
+        algorithms= ["PRM","PRM-Hybrid", "RRT-Connect", "RRT*", "RRT* - Biased", "RRT", "RRT - Biased", "RRT* - Beta"],
+        maps=["Rooms"],
+        runs_per_test = 20,
         step_size = 5.0,
         output_file="benchmark_results.csv",
         num_samples_excluding_grid=500,
