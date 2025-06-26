@@ -10,6 +10,7 @@ from algorithms.algorithms_implementations.rrt_star_biased import RRTStarBiasedA
 from algorithms.algorithms_implementations.prm import PRMAlgorithm
 from algorithms.algorithms_implementations.prm_hybrid import HybridPRMAlgorithm
 from algorithms.algorithms_implementations.rrt_star_beta import RRTStarBetaAlgorithm
+from algorithms.algorithms_implementations.learned_prm import LearnedPRMAlgorithm
 
 algorithms = [
     {
@@ -19,6 +20,10 @@ algorithms = [
     {
         "name": "PRM-Hybrid",
         "algorithm": HybridPRMAlgorithm
+    },
+    {
+        "name": "PRM-ML",
+        "algorithm": LearnedPRMAlgorithm
     },
     {
         "name": "RRT-Connect",

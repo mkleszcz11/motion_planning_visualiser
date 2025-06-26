@@ -1,0 +1,71 @@
+Step-by-Step Guide for GNN Training
+This process is divided into two main stages: generating the experience (the dataset) and then learning from it (training the model).
+Prerequisites
+Before you begin, ensure you have the following set up in your motion_planning_visualiser project directory:
+Python Environment: Your virtual environment (.venv) is activated.
+Required Libraries: All necessary Python packages are installed. If you haven't already, run:
+
+Generated bash
+pip install torch numpy tqdm torch_geometric
+
+(Note: For GPU training, ensure you have installed the PyTorch and PyTorch Geometric versions that match your CUDA toolkit. See their official websites for specific installation commands.)
+Stage 1: Generate the Training Dataset
+In this stage, you will run the standard PRMAlgorithm on all the maps in your project. The script will collect the successful paths and label every point in the resulting graphs to create a dataset of "good" and "bad" samples.
+Command:
+Open your terminal in the root directory of the motion_planning_visualiser project.
+Run the following command:
+
+Generated bash
+python train_gnn.py generate --runs-per-map 15 --prm-samples 600
+
+What This Command Does:
+python train_gnn.py generate: This tells the script to run in dataset generation mode.
+--runs-per-map 15: This is a crucial parameter. It instructs the script to run the PRM algorithm 15 times on each map. Using multiple runs with different random start/goal points for each map creates a richer, more diverse dataset.
+--prm-samples 600: This sets the number of nodes the underlying PRM algorithm will sample for each run.
+Expected Output:
+You will see the script start up, discover your maps, and then begin the generation process with a tqdm progress bar:
+
+Generated code
+2025-06-26 15:00:00,123 - INFO - Found 7 maps via MapsManager: Maze Map, Simple Map V1, ...
+Generating graph data:   0%|                                     | 0/105 [00:00<?, ?it/s]
+
+The progress bar will fill up as data is generated. It's normal to see some warnings about timeouts or unexpected errors if a particular random start/goal pair is impossible to solve.
+Outcome:
+Once the process is complete, a new file will be created in your project's root directory:
+prm_dataset.pt: This single file contains all the graph data, features, and labels needed for training.
+Stage 2: Train the GNN Model
+Now that you have the dataset, you can train the GNNModel to learn the patterns of successful paths from that data.
+Command:
+In the same terminal, run the following command:
+
+Generated bash
+python train_gnn.py train --epochs 75 --learning-rate 0.01
+
+What This Command Does:
+python train_gnn.py train: This tells the script to run in model training mode.
+--epochs 75: An epoch is one full pass through the entire training dataset. This command tells the model to "study" the full dataset 75 times.
+--learning-rate 0.01: This controls how much the model adjusts its weights during each step of training. It's a standard starting value.
+Expected Output:
+The script will load prm_dataset.pt and begin the training loop. For each epoch, you will see a log of the training and validation loss. The key thing to look for is the Val Loss decreasing and the message indicating a new best model has been saved:
+Generated code
+
+2025-06-26 15:05:00,456 - INFO - Training on device: cuda
+2025-06-26 15:05:01,789 - INFO - Class Imbalance: Pos_weight = 15.43
+Epoch 01: Train Loss: 0.6891, Val Loss: 0.6512
+  -> New best model saved to 'gnn_model.pth'
+Epoch 02: Train Loss: 0.6432, Val Loss: 0.6188
+  -> New best model saved to 'gnn_model.pth'
+...
+Epoch 75: Train Loss: 0.2134, Val Loss: 0.2876
+
+Outcome:
+The script will save the version of the model that performed best on the validation data. This file is your final, trained model:
+gnn_model.pth: The saved weights of your trained GNN.
+Next Steps: Using Your Trained Model
+You are now ready to use your intelligent sampler!
+Run the main application:
+
+python main.py
+
+In the GUI, select "LearnedPRM" from the algorithm dropdown menu.
+Run a simulation. The LearnedPRMAlgorithm will automatically load gnn_model.pth and use the GNN to guide its sampling, resulting in a more efficient planning process.
